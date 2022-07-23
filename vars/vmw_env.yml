@@ -5,17 +5,16 @@ vcenter_password: Admin@123
 vcenter_datacenter: Datacenter
 vms:
 
-  - name: c7-openshift-aio
-    esxi_hostname: 10.1.17.14
-    resource_pool: c7-openshift
+  - name: c8-server-a
+    esxi_hostname: 10.1.17.12
+    resource_pool: c8-ceph
     disk:
-    - size_gb: 100
+    - size_gb: 50
       type: thin
-      datastore: node4-ssd1
-   
+      datastore: node2-sata1
     networks:
       - name: vlan_111
-        ip: 10.1.17.96
+        ip: 10.1.17.101
         netmask: 255.255.0.0
         gateway: 10.1.0.1
         device_type: vmxnet3
@@ -24,8 +23,131 @@ vms:
         device_type: vmxnet3
 
       - name: vlan_126
-        ip: 192.168.126.96
+        ip: 192.168.126.101
         netmask: 255.255.255.0
         device_type: vmxnet3
 
- 
+  - name: c8-server-b
+    esxi_hostname: 10.1.17.12
+    resource_pool: c8-ceph
+    disk:
+    - size_gb: 50
+      type: thin
+      datastore: node2-sata1
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.102
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.102
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+
+  - name: c8-server-c
+    esxi_hostname: 10.1.17.14
+    resource_pool: c8-ceph
+    disk:
+    - size_gb: 50
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1     
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.103
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.103
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: c8-server-d
+    esxi_hostname: 10.1.17.14
+    resource_pool: c8-ceph
+    disk:
+    - size_gb: 50
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1     
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.104 
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.104
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: c8-server-e
+    esxi_hostname: 10.1.17.14
+    resource_pool: c8-ceph
+    disk:
+    - size_gb: 50
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1       
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.105
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.105
+        netmask: 255.255.255.0
+        device_type: vmxnet3
