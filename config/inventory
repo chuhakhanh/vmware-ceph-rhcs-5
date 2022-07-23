@@ -1,2 +1,7 @@
-[infra]
-c7-openshift-aio
+[ceph]
+c8-server-a
+c8-server-b
+c8-server-c
+c8-server-d
+c8-server-e
+c8-server-f

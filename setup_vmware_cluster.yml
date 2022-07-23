@@ -6,9 +6,9 @@
   serial: 4
   tasks:     
     - name: Deploy the openshift cluster on VMware environment
-      include: deploy_vmware_cluster_openshift.yml
+      include: deploy_vmware_cluster.yml
       when: action == "create"
 
     - name: Destroy the openshift cluster on VMware environment
-      include: destroy_vmware_cluster_openshift.yml
+      include: destroy_vmware_cluster.yml
       when: action == "destroy"
