@@ -1,0 +1,31 @@
+# vmware vars
+vcenter_hostname: 10.1.17.41
+vcenter_username: administrator@vsphere.local
+vcenter_password: Admin@123
+vcenter_datacenter: Datacenter
+vms:
+
+  - name: c7-openshift-aio
+    esxi_hostname: 10.1.17.14
+    resource_pool: c7-openshift
+    disk:
+    - size_gb: 100
+      type: thin
+      datastore: node4-ssd1
+   
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.96
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.96
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+ 
