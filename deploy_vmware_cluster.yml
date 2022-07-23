@@ -10,7 +10,7 @@
     folder: /khanhchu
     name: "{{ item.name }}"
     state: poweredon
-    template: tpl-rhel-8.5-vmware-tools
+    template: tpl-rhel-8.5
     esxi_hostname: "{{ item.esxi_hostname }}"
     disk: "{{ item.disk }}"
     hardware:
