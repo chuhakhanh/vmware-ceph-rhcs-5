@@ -2,9 +2,12 @@
 
 ## Setup cluster
 ### Deploy virtual machines cluster
+From deploy-1 
 Create a Virtual machine cluster and push public ssh key into this machines due to predefined password
 Then apply prequisite for virual machines
-
+    
+    docker exec -it deploy-1 /bin/bash;
+    git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
     ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create"
     chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
     ansible-playbook -i config/inventory prepare_all_node.yml
