@@ -151,3 +151,37 @@ vms:
         ip: 192.168.126.105
         netmask: 255.255.255.0
         device_type: vmxnet3
+
+  - name: c8-server-f
+    esxi_hostname: 10.1.17.14
+    resource_pool: c8-ceph
+    disk:
+    - size_gb: 50
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 20
+      type: thin
+      datastore: node4-sata1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1
+    - size_gb: 10
+      type: thin
+      datastore: node4-ssd1       
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.106
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_all
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.106
+        netmask: 255.255.255.0
+        device_type: vmxnet3
