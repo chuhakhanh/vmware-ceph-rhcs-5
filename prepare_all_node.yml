@@ -26,6 +26,6 @@
     
     - name: Copy repo file to etc host
       copy:
-        src: config/2022_03.repo
+        src: config/2022_07.repo
         dest: /etc/yum.repos.d/
  

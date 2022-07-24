@@ -8,8 +8,12 @@ Then apply prequisite for virual machines
     
     docker exec -it deploy-1 /bin/bash;
     git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
+    cd /root/vmware-ceph-rhcs-5
     ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create"
+    
+    cp -u config/hosts /etc/hosts
     chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
+    
     ansible-playbook -i config/inventory prepare_all_node.yml
 
 ## Setup ceph version rhcs5
