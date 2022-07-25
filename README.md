@@ -21,12 +21,12 @@ Then apply prequisite for virual machines
 Due to Bug 2013215 (https://bugzilla.redhat.com/show_bug.cgi?id=2013215) we have to specify the local private registry into the bootstrap command. 
 Below is tested configuration have worked with cephadm bootstrap command. 
 
-    cat /etc/containers/registries.conf | grep . | grep -v "#"
+    cat /etc/containers/registries.conf 
     unqualified-search-registries = ["registry.fedoraproject.org", "registry.access.redhat.com", "registry.centos.org", "docker.io"]
     [[registry]]
-    location = "repo-2:8080"
-    insecure = true
-    # prefix = "registry.redhat.io"
+    location = "repo-2.lab.example.com"
+    prefix = "registry.redhat.io"
+    
     short-name-mode = "permissive"
 
 
@@ -35,7 +35,7 @@ Below is tested configuration have worked with cephadm bootstrap command.
 ### cephadm-ansible on c8-server-c
 Login node c8-server-c, install require software to bootstrap ceph cluster
     
-    yum install cephadm-ansible
+    yum install -y cephadm-ansible
     cd /usr/share/cephadm-ansible
     ssh-keygen
     chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory

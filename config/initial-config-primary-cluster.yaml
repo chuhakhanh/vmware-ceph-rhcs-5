@@ -1,0 +1,49 @@
+---
+service_type: host
+addr: 10.1.17.101
+hostname: c8-server-a
+---
+service_type: host
+addr: 10.1.17.103
+hostname: c8-server-c
+---
+service_type: host
+addr: 10.1.17.104
+hostname: c8-server-d
+---
+service_type: host
+addr: 10.1.17.105
+hostname: c8-server-e
+---
+service_type: mon
+placement:
+hosts:
+- c8-server-a
+- c8-server-c
+- c8-server-d
+- c8-server-e
+---
+service_type: rgw
+service_id: realm.zone
+placement:
+hosts:
+- c8-server-c
+- c8-server-d
+---
+service_type: mgr
+placement:
+hosts:
+- clienta
+- c8-server-c
+- c8-server-d
+- c8-server-e
+---
+service_type: osd
+service_id: default_drive_group
+placement:
+host_pattern: 'c8-server-*'
+data_devices:
+paths:
+- /dev/sdb
+- /dev/sdc
+- /dev/sdd
