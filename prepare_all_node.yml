@@ -46,5 +46,5 @@
         path: /etc/containers/registries.conf
         block: |
           [[registry]]
-          location = "repo-2.lab.example.com"
+          location = "repo-2.lab.example.com/quayadmin/lab"
           prefix = "registry.redhat.io"
