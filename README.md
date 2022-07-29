@@ -42,21 +42,16 @@ Login node c8-server-c, install require software to bootstrap ceph cluster
 
 ### bootstrap ceph cluster on c8-server-c
 
+### copy initial-config-primary-cluster.yaml to repo-2
+From deploy-1
+
+    scp config/initial-config-primary-cluster.yaml repo-2:/data/repos/html/config
+    
 #### bootstrap with a yaml 
 
     podman login repo-2.lab.example.com --username quayadmin --password password
-    wget repo-2/config/initial-config-primary-cluster.yaml /root/ceph
     cd /root/ceph
-    cephadm bootstrap --mon-ip=10.1.17.103 \
-    --apply-spec=initial-config-primary-cluster.yaml \
-    --initial-dashboard-password=redhat \
-    --dashboard-password-noupdate \
-    --allow-fqdn-hostname \
-    --registry-url=repo-2.lab.example.com \
-    --registry-username=quayadmin \
-    --registry-password=password  \
-    --yes-i-know
-
+    wget repo-2/config/initial-config-primary-cluster.yaml /root/ceph
 
     cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.103 \
     --apply-spec=initial-config-primary-cluster.yaml \
@@ -67,37 +62,3 @@ Login node c8-server-c, install require software to bootstrap ceph cluster
     --registry-username=quayadmin \
     --registry-password=password  \
     --yes-i-know
-#### bootstrap with a default parameters (using redhat registry)
- 
-    cephadm bootstrap --mon-ip=10.1.17.69 \
-    --initial-dashboard-password=redhat \
-    --dashboard-password-noupdate \
-    --allow-fqdn-hostname --yes-i-know
-
-#### bootstrap with a local private registry (work)
-
-    cephadm --image repo-2:8080/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.69 \
-    --initial-dashboard-password=redhat \
-    --dashboard-password-noupdate \
-    --allow-fqdn-hostname --yes-i-know \
-    --registry-url repo-2:8080 \
-    --registry-username quayadmin \
-    --registry-password password
-
-#### or bootstrap with a local private registry using auth.json  (work)
-    vi /root/auth.json
-    {
-    "url": "repo-2:8080",
-    "username": "quayadmin",
-    "password": "password"
-    }
-
-
-   cephadm --image repo-2:8080/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.69 \
-    --initial-dashboard-password=redhat \
-    --dashboard-password-noupdate \
-    --allow-fqdn-hostname --yes-i-know \
-    --registry-json /root/auth.json
-
-#### enable telemetry after bootstrap
-    ceph telemetry on --license sharing-1-0

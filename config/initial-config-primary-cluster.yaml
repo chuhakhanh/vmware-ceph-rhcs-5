@@ -40,7 +40,10 @@ placement:
 service_type: osd
 service_id: default_drive_group
 placement:
-  host_pattern: 'c8-server-*'
+  hosts:
+    - c8-server-c
+    - c8-server-d
+    - c8-server-e
 data_devices:
   paths:
     - /dev/sdb
