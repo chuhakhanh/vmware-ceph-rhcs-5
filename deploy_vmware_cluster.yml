@@ -7,9 +7,9 @@
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
     cluster: "{{ item.cluster_name }}"
-    resource_pool: "{{ lab }}"    
+    resource_pool: "{{ lab_name }}"    
     state: present
-  loop: "{{ vms }}" 
+  loop: "{{ labs.lab_name }}" 
   delegate_to: localhost  
 
 - name: Create a virtual machine from a template
