@@ -5,7 +5,7 @@
 ### Methodology
 We need to setup clusters for 10 people. Each people use a resource pool with the same name. 
 
-    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab=lab1"
+    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
 
 ### Deploy virtual machines cluster
 From deploy-1 
