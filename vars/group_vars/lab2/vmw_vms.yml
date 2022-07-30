@@ -14,7 +14,7 @@ vms:
         device_type: vmxnet3
 
       - name: vlan_126
-        ip: 192.168.126.122e
+        ip: 192.168.126.122
         netmask: 255.255.255.0
         device_type: vmxnet3
 
