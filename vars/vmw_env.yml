@@ -5,11 +5,11 @@ vcenter_password: Admin@123
 vcenter_datacenter: Datacenter
 vms:
 
-  - name: c8-server-a
+  - name: lab1-servera
     esxi_hostname: 10.1.17.12
     resource_pool: c8-ceph
     disk:
-    - size_gb: 50
+    - size_gb: 10
       type: thin
       datastore: node2-sata1
     networks:
@@ -24,11 +24,11 @@ vms:
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: c8-server-b
+  - name: lab2-servera
     esxi_hostname: 10.1.17.12
     resource_pool: c8-ceph
     disk:
-    - size_gb: 50
+    - size_gb: 10
       type: thin
       datastore: node2-sata1
     networks:

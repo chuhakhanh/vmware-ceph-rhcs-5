@@ -7,8 +7,10 @@
   tasks:     
     - name: Deploy the openshift cluster on VMware environment
       include: deploy_vmware_cluster.yml
-      when: action == "create"
-
+      when: 
+        - action == "create" 
+        
     - name: Destroy the openshift cluster on VMware environment
       include: destroy_vmware_cluster.yml
-      when: action == "destroy"
+      when: 
+        - action == "destroy"
