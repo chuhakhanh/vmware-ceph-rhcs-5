@@ -5,14 +5,14 @@
   serial: 4
   tasks: 
 
-    - name: set system hostname
-      shell: |
-        hostnamectl set-hostname `echo "{{ inventory_hostname }}" | cut -d '-' -f 2`
-    
     - name: Copy host file to etc host
       copy:
         src: "vars/group_vars/{{ lab_name }}/hosts"
         dest: /etc/hosts
+
+    - name: Set system hostname
+      shell: |
+        hostnamectl set-hostname `grep "{{ inventory_hostname }}" /etc/hosts | cut -d '-' -f 2`
     
     - name: Create a backup directory if it does not exist
       file:
