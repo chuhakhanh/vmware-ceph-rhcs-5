@@ -10,6 +10,7 @@
     esxi_hostname: "{{ item.esxi_hostname }}"
     resource_pool: "{{ lab }}"    
     state: present
+  loop: "{{ vms }}" 
   delegate_to: localhost  
 
 - name: Create a virtual machine from a template
