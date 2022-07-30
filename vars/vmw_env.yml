@@ -6,7 +6,7 @@ vcenter_datacenter: Datacenter
 vms:
 
   - name: lab1-servera
-    cluster: OPS
+    cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
     - size_gb: 10
@@ -25,7 +25,7 @@ vms:
         device_type: vmxnet3
 
   - name: lab2-servera
-    cluster: OPS
+    cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
     - size_gb: 10
