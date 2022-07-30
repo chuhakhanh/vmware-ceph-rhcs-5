@@ -7,7 +7,7 @@
   tasks:    
 
     - name: Use specific var file
-      include_vars:
+      include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
       vars:
         params:
           files:
