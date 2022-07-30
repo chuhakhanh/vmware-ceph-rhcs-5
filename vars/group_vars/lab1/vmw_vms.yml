@@ -1,11 +1,32 @@
 vms:
-  - name: lab1-servera
+  - name: lab1-clienta
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
     - size_gb: 10
       type: thin
       datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
     networks:
       - name: vlan_111
         ip: 10.1.17.111
@@ -18,7 +39,245 @@ vms:
         netmask: 255.255.255.0
         device_type: vmxnet3
 
+  - name: lab1-clientb
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
 
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.112
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.112
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab1-serverc
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.113
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.113
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab1-serverd
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.114
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.114
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab1-servere
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.115
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.115
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab1-serverf
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.116
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.116
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab1-serverg
+    cluster_name: OPS
+    esxi_hostname: 10.1.17.12
+    disk:
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1
+    
+    - size_gb: 10
+      type: thin
+      datastore: node2-sata1  
+      
+    networks:
+      - name: vlan_111
+        ip: 10.1.17.117
+        netmask: 255.255.0.0
+        gateway: 10.1.0.1
+        device_type: vmxnet3
+
+      - name: vlan_126
+        ip: 192.168.126.117
+        netmask: 255.255.255.0
+        device_type: vmxnet3
 
 
  

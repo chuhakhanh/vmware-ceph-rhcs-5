@@ -2,15 +2,11 @@
 
 
 # lab support
-10.1.17.33 repo-1
-10.1.17.34 deploy-1
 10.1.17.35 repo-2 repo-2.lab.example.com
-10.1.17.41 vc1.svt.hn
-
 # lab1
 
-10.1.17.111 servera servera.lab.example.com
-10.1.17.112 serverb serverb.lab.example.com
+10.1.17.111 clienta clienta.lab.example.com
+10.1.17.112 clientb clientb.lab.example.com
 10.1.17.113 serverc serverc.lab.example.com
 10.1.17.114 serverd serverd.lab.example.com
 10.1.17.115 servere servere.lab.example.com

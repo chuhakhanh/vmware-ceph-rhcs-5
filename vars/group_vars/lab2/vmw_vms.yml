@@ -8,13 +8,13 @@ vms:
       datastore: node2-sata1
     networks:
       - name: vlan_111
-        ip: 10.1.17.122
+        ip: 10.1.17.121
         netmask: 255.255.0.0
         gateway: 10.1.0.1
         device_type: vmxnet3
 
       - name: vlan_126
-        ip: 192.168.126.122
+        ip: 192.168.126.121
         netmask: 255.255.255.0
         device_type: vmxnet3
 
