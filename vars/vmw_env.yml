@@ -6,8 +6,8 @@ vcenter_datacenter: Datacenter
 vms:
 
   - name: lab1-servera
+    cluster: OPS
     esxi_hostname: 10.1.17.12
-    resource_pool: c8-ceph
     disk:
     - size_gb: 10
       type: thin
@@ -25,8 +25,8 @@ vms:
         device_type: vmxnet3
 
   - name: lab2-servera
+    cluster: OPS
     esxi_hostname: 10.1.17.12
-    resource_pool: c8-ceph
     disk:
     - size_gb: 10
       type: thin
