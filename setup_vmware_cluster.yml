@@ -7,11 +7,11 @@
   tasks:    
 
     - name: Deploy the lab cluster on VMware environment
-      import_tasks: deploy_vmware_cluster.yml
+      include: deploy_vmware_cluster.yml
       when: 
         - action == "create"
 
     - name: Destroy the lab cluster on VMware environment
-      import_tasks: destroy_vmware_cluster.yml
+      include: destroy_vmware_cluster.yml
       when: 
         - action == "destroy"
