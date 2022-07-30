@@ -8,8 +8,7 @@
 
     - name: Use specific var file
       include_vars:
-        file: 
-          - "vars/group_vars/{{lab_name}}/vmw_vms.yml"
+        file: "group_vars/{{lab_name}}/vmw_vms.yml"
 
     - name: Deploy the lab cluster on VMware environment
       include: deploy_vmware_cluster.yml

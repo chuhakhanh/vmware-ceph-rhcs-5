@@ -1,47 +1,24 @@
 # vmware vars
-vcenter_hostname: 10.1.17.41
-vcenter_username: administrator@vsphere.local
-vcenter_password: Admin@123
-vcenter_datacenter: Datacenter
 vms:
+  lab2:
+    - name: lab2-servera
+      cluster_name: OPS
+      esxi_hostname: 10.1.17.12
+      disk:
+      - size_gb: 10
+        type: thin
+        datastore: node2-sata1
+      networks:
+        - name: vlan_111
+          ip: 10.1.17.122
+          netmask: 255.255.0.0
+          gateway: 10.1.0.1
+          device_type: vmxnet3
 
-  - name: lab1-servera
-    cluster_name: OPS
-    esxi_hostname: 10.1.17.12
-    disk:
-    - size_gb: 10
-      type: thin
-      datastore: node2-sata1
-    networks:
-      - name: vlan_111
-        ip: 10.1.17.111
-        netmask: 255.255.0.0
-        gateway: 10.1.0.1
-        device_type: vmxnet3
-
-      - name: vlan_126
-        ip: 192.168.126.111
-        netmask: 255.255.255.0
-        device_type: vmxnet3
-
-  - name: lab2-servera
-    cluster_name: OPS
-    esxi_hostname: 10.1.17.12
-    disk:
-    - size_gb: 10
-      type: thin
-      datastore: node2-sata1
-    networks:
-      - name: vlan_111
-        ip: 10.1.17.122
-        netmask: 255.255.0.0
-        gateway: 10.1.0.1
-        device_type: vmxnet3
-
-      - name: vlan_126
-        ip: 192.168.126.122
-        netmask: 255.255.255.0
-        device_type: vmxnet3
+        - name: vlan_126
+          ip: 192.168.126.122
+          netmask: 255.255.255.0
+          device_type: vmxnet3
 
 
  
