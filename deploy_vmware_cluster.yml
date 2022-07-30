@@ -1,12 +1,8 @@
 ---
+
 - name: Use specific var file
   include_vars:
-  vars:
-    params:
-      files:
-        - "vmw_vms.yml"
-      paths:
-        - "vars/groups_vars/{{lab_name}}"
+    file: "group_vars/{{lab_name}}/vmw_vms.yml"
 
 - name: Create resouce pool for student if not existence 
   community.vmware.vmware_resource_pool:
