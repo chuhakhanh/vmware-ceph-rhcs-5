@@ -6,12 +6,12 @@
   tasks: 
 
     - name: set system hostname
-      hostname:
-        name: "{{ inventory_hostname }}"
+      shell: |
+        hostnamectl set-hostname `echo "{{ inventory_hostname }}" | cut -d '-' -f 2`
     
     - name: Copy host file to etc host
       copy:
-        src: config/hosts
+        src: "vars/group_vars/{{ lab_name }}/hosts"
         dest: /etc/hosts
     
     - name: Create a backup directory if it does not exist
