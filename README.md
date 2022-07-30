@@ -23,6 +23,7 @@ Then apply prequisite for virual machines
     ansible-playbook -i config/inventory prepare_all_node.yml -e "lab_name=lab2"
 
 Full provisioning 
+
     for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10
     do
         ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab_name=$i"
@@ -30,10 +31,13 @@ Full provisioning
     chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
 
 Prepare the lab
+
     for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10
     do
-        ansible-playbook -i config/inventory prepare_vmware_cluster.yml -e "lab_name=$i"
+        ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
     done
+
+
 
 ## Setup ceph version rhcs5
 ### Configure quayio as default insecure local registry 

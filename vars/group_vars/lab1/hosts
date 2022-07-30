@@ -7,7 +7,7 @@
 10.1.17.35 repo-2 repo-2.lab.example.com
 10.1.17.41 vc1.svt.hn
 
-# cluster c9 - ceph - lab1
+# lab1
 
 10.1.17.111 servera servera.lab.example.com
 10.1.17.112 serverb serverb.lab.example.com

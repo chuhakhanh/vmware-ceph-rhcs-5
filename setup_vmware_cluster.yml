@@ -6,10 +6,6 @@
   serial: 4
   tasks:    
 
-    - name: Use specific var file
-      include_vars:
-        file: "group_vars/{{lab_name}}/vmw_vms.yml"
-
     - name: Deploy the lab cluster on VMware environment
       import_tasks: deploy_vmware_cluster.yml
       when: 
