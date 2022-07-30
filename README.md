@@ -2,26 +2,36 @@
 
 ## Setup cluster
 
-### Methodology
-We need to setup clusters for 10 people. Each people use a resource pool with the same name. 
-
-    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
+### Introduction
+Lab environment is provisioning for 10 people. Each people will use a resource pool with the same name. 
 
 ### Deploy virtual machines cluster
 From deploy-1 
-Create a Virtual machine cluster and push public ssh key into this machines due to predefined password
-Then apply prequisite for virual machines
-    
-    docker exec -it deploy-1 -u0
-     /bin/bash;
+Create a Virtual machine cluster 
+
+    docker exec -it deploy-1 -u0 /bin/bash;
     git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
     cd /root/vmware-ceph-rhcs-5
-    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create"
+    git checkout lab-7-2022
+    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
+    ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab2"
+
+Push public ssh key into this machines due to predefined password
+Then apply prequisite for virual machines
     
-    cp -u config/hosts /etc/hosts
     chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
-    
-    ansible-playbook -i config/inventory prepare_all_node.yml
+    ansible-playbook -i config/inventory prepare_all_node.yml -e "lab_name=lab2"
+
+Full provisioning 
+    for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10
+    do
+        ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=create" -e "lab_name=$i"
+    done
+    chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
+    for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10
+    do
+        ansible-playbook -i config/inventory setup_vmware_cluster.yml -e "action=prepare" -e "lab_name=$i"
+    done
 
 ## Setup ceph version rhcs5
 ### Configure quayio as default insecure local registry 
