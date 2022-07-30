@@ -11,11 +11,11 @@
         file: "group_vars/{{lab_name}}/vmw_vms.yml"
 
     - name: Deploy the lab cluster on VMware environment
-      include: deploy_vmware_cluster.yml
+      import: deploy_vmware_cluster.yml
       when: 
         - action == "create"
 
     - name: Destroy the lab cluster on VMware environment
-      include: destroy_vmware_cluster.yml
+      import: destroy_vmware_cluster.yml
       when: 
         - action == "destroy"
