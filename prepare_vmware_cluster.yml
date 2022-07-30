@@ -4,7 +4,7 @@
   tasks:    
 
     - name: Use specific var file
-      include_task: prepare_a_node.yml
+      include: prepare_a_node.yml
       when: 
         - group == "{{ lab_name }}"
     
