@@ -7,13 +7,9 @@
   tasks:    
 
     - name: Use specific var file
-      include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
-      vars:
-        params:
-          files:
-            - "vmw_vms.yml"
-          paths:
-            - "vars/group_vars/{{lab_name}}"
+      include_vars:
+        file: 
+          - "vars/group_vars/{{lab_name}}/vmw_vms.yml"
 
     - name: Deploy the lab cluster on VMware environment
       include: deploy_vmware_cluster.yml
