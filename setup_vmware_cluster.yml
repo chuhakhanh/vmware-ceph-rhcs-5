@@ -4,7 +4,16 @@
   gather_facts: no
   become: true
   serial: 4
-  tasks:     
+  tasks:    
+   
+    - name: Use specific var file
+      include_vars:
+      vars:
+        params:
+          files:
+            - "vmw_vms.yml"
+          paths:
+            - "vars/groups_vars/{{lab_name}}"
 
     - name: Deploy the lab cluster on VMware environment
       include: deploy_vmware_cluster.yml
