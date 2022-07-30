@@ -19,8 +19,6 @@ Create a Virtual machine cluster
 Push public ssh key into this machines due to predefined password
 Then apply prequisite for virual machines
     
-    chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/lab
-    ansible-playbook -i config/inventory/lab prepare_all_node.yml -e "lab_name=lab2"
 
 Fully provisioning all lab
 
