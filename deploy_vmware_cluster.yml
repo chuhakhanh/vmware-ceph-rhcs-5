@@ -7,7 +7,7 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
-    esxi_hostname: "{{ item.esxi_hostname }}"
+    cluster: "{{ item.cluster_name }}"
     resource_pool: "{{ lab }}"    
     state: present
   loop: "{{ vms }}" 
@@ -20,6 +20,7 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
+    cluster: "{{ item.cluster_name }}"
     resource_pool: "{{ lab }}"
     folder: /lab
     name: "{{ item.name }}"
