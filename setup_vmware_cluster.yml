@@ -10,7 +10,7 @@
       include: deploy_vmware_cluster.yml
       when: 
         - action == "create" 
-        - labs == "{{ lab_name }}""
+        - item.name == "{{ lab_name }}""
       loop: "{{ labs }}"
 
     - name: Destroy the openshift cluster on VMware environment
