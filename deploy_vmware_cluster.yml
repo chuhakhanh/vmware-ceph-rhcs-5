@@ -1,5 +1,4 @@
 ---
-
 - name: Create resouce pool for student if not existence 
   community.vmware.vmware_resource_pool:
     hostname: "{{ vcenter_hostname }}"
@@ -20,7 +19,7 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
-    resource_pool: "{{ lab }}"
+    resource_pool: "{{ lab_name }}"
     folder: /lab
     name: "{{ item.name }}"
     state: poweredon
@@ -42,7 +41,7 @@
       dns_servers: 8.8.8.8 
     wait_for_ip_address: true
     wait_for_ip_address_timeout: 600
-  loop: "{{ vms }}" 
+  loop: "{{ labs.lab_name }}" 
   delegate_to: localhost
   register: deploy
 

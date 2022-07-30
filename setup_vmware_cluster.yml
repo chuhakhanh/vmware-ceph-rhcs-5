@@ -6,14 +6,14 @@
   serial: 4
   tasks:     
 
-    - name: Deploy the openshift cluster on VMware environment
+    - name: Deploy the lab cluster on VMware environment
       include: deploy_vmware_cluster.yml
       when: 
         - action == "create" 
         - item.name == "{{ lab_name }}""
       loop: "{{ labs }}"
 
-    - name: Destroy the openshift cluster on VMware environment
+    - name: Destroy the lab cluster on VMware environment
       include: destroy_vmware_cluster.yml
       when: 
         - action == "destroy"
