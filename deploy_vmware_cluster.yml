@@ -48,6 +48,6 @@
     wait_for_ip_address_timeout: 600
   loop: "{{ vms }}" 
   delegate_to: localhost
-  register: deploy
+
 
 
