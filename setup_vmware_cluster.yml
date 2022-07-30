@@ -5,7 +5,7 @@
   become: true
   serial: 4
   tasks:    
-   
+
     - name: Use specific var file
       include_vars:
       vars:
@@ -13,7 +13,7 @@
           files:
             - "vmw_vms.yml"
           paths:
-            - "vars/groups_vars/{{lab_name}}"
+            - "vars/group_vars/{{lab_name}}"
 
     - name: Deploy the lab cluster on VMware environment
       include: deploy_vmware_cluster.yml
