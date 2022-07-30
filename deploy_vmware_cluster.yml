@@ -1,4 +1,13 @@
 ---
+- name: Use specific var file
+  include_vars:
+  vars:
+    params:
+      files:
+        - "vmw_vms.yml"
+      paths:
+        - "vars/groups_vars/{{lab_name}}"
+
 - name: Create resouce pool for student if not existence 
   community.vmware.vmware_resource_pool:
     hostname: "{{ vcenter_hostname }}"
@@ -9,7 +18,7 @@
     cluster: "{{ item.cluster_name }}"
     resource_pool: "{{ lab_name }}"    
     state: present
-  loop: "{{ labs.lab_name }}" 
+  loop: "{{ vms }}" 
   delegate_to: localhost  
 
 - name: Create a virtual machine from a template
@@ -41,7 +50,7 @@
       dns_servers: 8.8.8.8 
     wait_for_ip_address: true
     wait_for_ip_address_timeout: 600
-  loop: "{{ labs.lab_name }}" 
+  loop: "{{ vms }}" 
   delegate_to: localhost
   register: deploy
 
