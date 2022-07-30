@@ -7,6 +7,7 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
+    esxi_hostname: "{{ item.esxi_hostname }}"
     resource_pool: "{{ lab }}"    
     state: present
   delegate_to: localhost  
