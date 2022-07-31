@@ -83,6 +83,7 @@ To redeploy the monitoring run:
 
 
 #### Add MON on c3-server-a
+
     cephadm shell -- ceph config dump
     ssh-copy-id -f -i /etc/ceph/ceph.pub root@c3-server-a
     cephadm shell -- ceph orch host add c3-server-a
@@ -94,9 +95,11 @@ To redeploy the monitoring run:
 ### OSD 
 
 #### Create OSD class
+
     ceph osd crush class ls
     ceph osd crush class create ssd 
 #### Add OSD by cli on admin c3-server-a
+
 Enable the orchestrator service to create OSD daemons automatically from the available cluster devices.
 
     ceph orch apply osd --all-available-devices
@@ -115,6 +118,7 @@ Enable the orchestrator service to create OSD daemons automatically from the ava
     done
 
 #### Remove OSD by cli
+
 To completely remove an OSD from Ceph cluster 
     ceph orch daemon stop osd.8
     ceph orch daemon rm osd.8 --force
@@ -126,6 +130,7 @@ To completely remove an OSD from Ceph cluster
 
 
 #### Create Bluestore OSD
+
 Add OSD by using CLI
 
     ceph orch device zap c3-server-c /dev/sdd --force
@@ -158,6 +163,7 @@ Show all service
 
 ### CONFIG 
 #### Compact MON Database
+
     [root@c3-server-a ~]# ceph mon dump
     epoch 8
     fsid 4d785516-f211-11ec-b064-005056bafcf9
@@ -178,6 +184,7 @@ Show all service
     ssh c3-server-c sudo du -sch /var/lib/ceph/4d7...cf9/mon.c3-server-c/store.db/
 
 #### Network    
+
 TO change cluster_network to 192.167.126.0/24
 
     ceph config get mon public_network 
@@ -198,6 +205,7 @@ TO change cluster_network to 192.167.126.0/24
     podman restart $(podman ps -a -q)
 
 #### Warning
+
     ceph config get mon.c3-server-c mon_data_avail_warn
     ceph config get mon.c3-server-c mon_max_pg_per_osd
     ceph config set mon mon_data_avail_warn 15
@@ -206,6 +214,7 @@ TO change cluster_network to 192.167.126.0/24
 ## POOL
 
 ### Create pool
+
     ceph osd pool create replpool1 64 64
 
 #### get set config 
@@ -218,7 +227,8 @@ TO change cluster_network to 192.167.126.0/24
     ceph osd pool rename replpool1 newpool
     ceph osd pool delete newpool
 
-#### erasure code
+#### Erasure code
+
     ceph osd erasure-code-profile ls
     ceph osd erasure-code-profile get default
     ceph osd erasure-code-profile set ecprofile-k4-m2 k=4 m=2
@@ -227,6 +237,7 @@ TO change cluster_network to 192.167.126.0/24
 ## AUTHENTICATION
 
 ### Client Name
+
 Naming convention
 
     librados:       client.openstack
