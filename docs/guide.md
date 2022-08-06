@@ -513,7 +513,7 @@ Create prepare rgw
     ceph orch ls
     ceph orch ls --service-type rgw
 
-Configure rgw service to start 2 RGW instances in serverd and servere, port 8080    
+Configure rgw service myrealm.myzone to start 2 RGW instances in serverd and servere, port 8080    
     
     vi /tmp/rgw_service.yaml
     service_type: rgw
@@ -526,5 +526,401 @@ Configure rgw service to start 2 RGW instances in serverd and servere, port 8080
         - servere.lab.example.com
     spec:
         rgw_frontend_port: 8080
-        
+
+    ceph orch apply -i rgw_service.yaml    
+    ceph orch ps --daemon-type rgw
+    NAME HOST STATUS
+    REFRESHED AGE PORTS ...
+    rgw.myrealm.myzone.serverd.tknapl serverd.lab.example.com running (14s) 0s ago
+    14s *:8080 ...
+    rgw.myrealm.myzone.serverd.xpabfe serverd.lab.example.com running (6s) 0s ago
+    6s *:8081 ...
+    rgw.myrealm.myzone.servere.lwusbq servere.lab.example.com running (18s) 0s ago
+    17s *:8080 ...
+    rgw.myrealm.myzone.servere.uyginy servere.lab.example.com running (10s) 0s ago
+    10s *:8081 ...
+
+On node serverd, servere
+
+    podman ps -a --format "{{.ID}} {{.Names}}" | grep rgw
+    curl http://serverd:8080
+    curl http://serverd:8081
+
 ## Section 2 - deploy rgw - multisite
+
+Setup realm, zonegroup, zone 
+- Each realm has an associated period, and each period has an associated epoch. A period is used to track the configuration state of the realm, zone groups, and zones at a particular time. 
+- Epochs are version numbers to track configuration changes for a particular realm period.
+- Each period has a unique ID, contains realm configuration, and knows the previous period ID.
+##  realm: cl260
+### zonegroup: classroom, zone: us-east-1
+
+Realm: cl260
+    
+    radosgw-admin realm create --rgw-realm=cl260 --default
+
+Zonegroup: classroom
+
+    radosgw-admin zonegroup create --rgw-zonegroup=classroom --endpoints=http://serverc:80 --master --default
+
+Zone: us-east-1
+
+    radosgw-admin zone create --rgw-zonegroup=classroom --rgw-zone=us-east-1 --endpoints=http://serverc:80 --master --default --access-key=replication --secret=secret
+
+User: repl.user
+
+    radosgw-admin user create --uid="repl.user" --system --display-name="Replication User" --secret=secret --access-key=replication
+    
+Commit:
+
+    radosgw-admin period update --commit
+
+Service: cl260-1
+
+    ceph orch apply rgw cl260-1 --realm=cl260 --zone=us-east-1 --placement="1 serverc"
+    ceph orch ps --daemon-type rgw
+    NAME HOST STATUS REFRESHED AGE PORTS ...
+    rgw.cl260-1.serverc.sxsntj serverc.lab.example.com running (6m) 6m ago 6m
+    *:80 ...
+
+Update zone name:
+
+    ceph config set client.rgw rgw_zone us-east-1
+
+ View:
+
+    radosgw-admin realm pull --url=http://serverc:80 --access-key=replication --secret-key=secret
+    radosgw-admin period get-current
+    {
+    "current_period": "7cdc83cf-69d8-478e-b625-d5250ac4435b"
+    }
+### zonegroup: classroom, zone: us-east-2
+
+Realm: cl260
+    
+    radosgw-admin realm default --rgw-realm=cl260
+
+Zonegroup: classroom
+
+    radosgw-admin zonegroup default --rgw-zonegroup=classroom 
+
+Zone: us-east-2
+
+    radosgw-admin zone create --rgw-zonegroup=classroom --rgw-zone=us-east-2 --endpoints=http://serverf:80 --default --default --access-key=replication --secret=secret
+
+Commit:
+
+    radosgw-admin period update --commit --rgw-zone=us-east-2
+    {
+    "id": "7cdc83cf-69d8-478e-b625-d5250ac4435b",
+    }
+
+Update zone name:
+
+    ceph config set client.rgw rgw_zone us-east-2
+
+Service: cl260-2
+
+    ceph orch apply rgw cl260-2 --realm=cl260 --zone=us-east-2 --placement="1 serverf"
+    ceph orch ps --daemon-type rgw
+    NAME HOST STATUS REFRESHED AGE PORTS ...
+    rgw.east.serverf.zgkgem serverf.lab.example.com running (37m) 6m ago 37m
+    *:80 ...
+
+
+ View:
+
+    radosgw-admin realm pull --url=http://serverc:80 --access-key=replication --secret-key=secret
+    radosgw-admin period get-current
+    {
+    "current_period": "7cdc83cf-69d8-478e-b625-d5250ac4435b"
+    }
+
+    radosgw-admin sync status
+
+##  realm: prod
+
+### zonegroup: us-west, zone: us-west-1
+
+    radosgw-admin realm create --rgw-realm=prod --default
+    radosgw-admin zonegroup create --rgw-zonegroup=us-west --endpoints=http://serverc:8080 --master --default
+    radosgw-admin zone create --rgw-zonegroup=us-west --rgw-zone=us-west-1 --endpoints=http://serverc:8080 --master --access-key=admin --secret=secure --default
+    radosgw-admin user create --uid="admin.user" --system --display-name="Admin User" --access-key=admin --secret=secure
+    radosgw-admin period update --commit
+    radosgw-admin period get-current
+    ceph orch apply rgw prod-object --realm=prod --zone=us-west-1 --port 8080 --placement="2 serverc.lab.example.com servere.lab.example.com"
+
+
+# Part 9 - rgw - rest API service
+
+## Section 1 - Amazon S3
+
+On node clienta
+
+    sudo cephadm shell -- radosgw-admin user create --uid="operator" --display-name="S3 Operator" --email="operator@example.com" --access_key="12345" --secret="67890"
+
+On clienta as S3 client
+
+    aws configure --profile=ceph
+    aws --profile=ceph --endpoint=http://serverc:80 s3 mb s3://testbucket
+    aws --profile=ceph --endpoint=http://serverc:80 s3 ls
+    dd if=/dev/zero of=/tmp/10MB.bin bs=1024K count=10
+    aws --profile=ceph --endpoint=http://serverc:80 --acl=public-read-write s3 cp /tmp/10MB.bin s3://testbucket/10MB.bin
+    
+On clienta as ceph admin    
+
+    wget -O /dev/null http://serverc:80/testbucket/10MB.bin
+    cephadm shell -- radosgw-admin bucket list
+    cephadm shell -- radosgw-admin metadata get bucket:testbucket
+
+## Section 2 - Amazon Swift
+
+On node clienta
+
+    cephadm shell -- radosgw-admin subuser create --uid="operator" --subuser="operator:swift" --access="full" --secret="opswift"
+
+On clienta as Swift client   
+
+    sudo pip3 install --upgrade python-swiftclient
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift list
+    testbucket
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift post testcontainer
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift list
+    testbucket
+    testcontainer
+    dd if=/dev/zero of=/tmp/swift.dat bs=1024K count=10
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift upload testcontainer /tmp/swift.dat
+    tmp/swift.dat
+    
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat
+    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat testcontainer
+
+## Section 3 - Access in multisite 
+
+On node serverf
+
+    swift -V 1.0 -A http://serverf:80/auth/v1 -U operator:swift -K opswift stat testcontainer    
+    swift -V 1.0 -A http://serverf:80/auth/v1 -U operator:swift -K opswift download testcontainer swift.dat
+
+# Part 10 - cephfs (ceph file share)
+
+## Section 1 - cephfs - Deploy
+
+### client to ceph : admin
+
+On clienta as ceph admin
+
+    ceph osd pool create mycephfs_data
+    ceph osd pool create mycephfs_metadata
+    ceph fs new mycephfs mycephfs_metadata mycephfs_data
+    ceph orch apply mds mycephfs --placement="1 serverc"
+    ceph mds stat
+    ceph status
+    ceph df
+    ls -l /etc/ceph
+    -rw-r--r--. 1 root root 63 Sep 17 21:42 ceph.client.admin.keyring
+
+On clienta as cephfs client - admin user
+
+
+    yum install ceph-common
+    mkdir /mnt/mycephfs
+    [root@clienta ~]# ls -l /etc/ceph
+    -rw-r--r--. 1 root root 63 Sep 17 21:42 ceph.client.admin.keyring
+    mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=admin
+    
+    df -h
+    mkdir /mnt/mycephfs/dir1
+    mkdir /mnt/mycephfs/dir2
+    ls -al /mnt/mycephfs/
+    touch /mnt/mycephfs/dir1/atestfile
+    dd if=/dev/zero of=/mnt/mycephfs/dir1/ddtest bs=1024 count=10000
+    umount /mnt/mycephfs
+
+On clienta as ceph admin
+
+    cephadm shell -- ceph fs status
+
+### client to ceph : restricted user
+
+On clienta as cephfs admin
+
+    cephadm shell --mount /etc/ceph
+    ceph fs authorize mycephfs client.restricteduser / r /dir2 rw
+    ceph auth get client.restricteduser -o /mnt/ceph.client.restricteduser.keyring
+
+On clienta as cephfs client - restricted user
+    
+    mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=restricteduser,fs=mycephfs
+    tree /mnt
+    /mnt
+    └── mycephfs
+        ├── dir1
+        │ ├── a3rdfile
+        │ └── ddtest
+        └── dir2
+    touch /mnt/mycephfs/dir1/restricteduser_file1
+    Permission denied
+    touch /mnt/mycephfs/dir2/restricteduser_file2
+    umount /mnt/mycephfs
+
+
+
+### cephfuse
+
+On clienta as cephfs client - restricted user
+    
+    yum install ceph-fuse
+    mkdir /mnt/mycephfuse
+    ceph-fuse -n client.restricteduser --client_fs mycephfs /mnt/mycephfuse
+    tree /mnt
+    /mnt
+    ├── mycephfs
+    └── mycephfuse
+        ├── dir1
+        │ ├── atestfile
+        │ └── ddtest
+        └── dir2
+    umount /mnt/mycephfuse
+
+Mount at boot
+
+    cat /etc/fstab
+    serverc.lab.example.com:/ /mnt/mycephfuse fuse.ceph ceph.id=restricteduser,_netdev
+    mount -a
+    df -h
+    umount /mnt/mycephfuse
+
+## Section 2 - cephfs - manafing file
+
+### setfattr
+
+On clienta as cephfs admin - setfattr
+
+    mkdir /mnt/mycephfs/dir1
+    touch /mnt/mycephfs/dir1/ddtest
+    getfattr -n ceph.dir.layout /mnt/mycephfs/dir1
+    /mnt/mycephfs/dir1: ceph.dir.layout: No such attribute
+    
+    setfattr -n ceph.dir.layout.stripe_count -v 2 /mnt/mycephfs/dir1
+    getfattr -n ceph.dir.layout /mnt/mycephfs/dir1
+    stripe_count=2
+    
+    getfattr -n ceph.file.layout /mnt/mycephfs/dir1/ddtest
+    stripe_count=1
+
+    touch /mnt/mycephfs/dir1/anewfile
+    getfattr -n ceph.file.layout /mnt/mycephfs/dir1/anewfile
+    stripe_count=2
+
+    setfattr -n ceph.file.layout.stripe_count -v 3 /mnt/mycephfs/dir1/anewfile
+    getfattr -n ceph.file.layout /mnt/mycephfs/dir1/anewfile
+    stripe_count=3
+
+    echo "Not empty" > /mnt/mycephfs/dir1/anewfile
+    setfattr -n ceph.file.layout.stripe_count -v 4 /mnt/mycephfs/dir1/anewfile
+    setfattr: /mnt/mycephfs/dir1/anewfile: Directory not empty
+
+    setfattr -x ceph.dir.layout /mnt/mycephfs/dir1
+    touch /mnt/mycephfs/dir1/a3rdfile
+    getfattr -n ceph.file.layout /mnt/mycephfs/dir1/a3rdfile
+    stripe_count=1
+
+    umount /mnt/mycephfs
+
+### snapshot
+
+On clienta as cephfs admin
+
+    mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=restricteduser
+    cd /mnt/mycephfs/.snap
+    mkdir mysnapshot
+    tree /mnt/mycephfs
+    /mnt/mycephfs
+    └── dir1
+        ├── a3rdfile
+        ├── anewfile
+        └── ddtest
+
+    tree /mnt/mycephfs/.snap/mysnapshot
+    /mnt/mycephfs/.snap/mysnapshot
+    └── dir1
+        ├── a3rdfile
+        ├── anewfile
+        └── ddtest
+
+On clienta as cephfs admin
+
+    ceph mgr module enable snap_schedule
+    ceph fs snap-schedule add / 1h
+    ceph fs snap-schedule status /
+
+Wait for several time
+
+    ls /mnt/mycephfs/.snap
+
+# Part 11 - Cluster
+
+## Section 1 - Monitoring
+
+Ceph module
+
+    ceph mgr module ls | more
+    ceph mgr services
+    ceph osd stat
+    ceph osd find 2
+
+OSD service
+
+    sudo systemctl list-units "ceph*"
+    sudo systemctl stop ceph-ff97a876-1fd2-11ec-8258-52540000fa0c@osd.2.service
+    ceph osd stat
+    journalctl -u ceph-ff97a876-1fd2-11ec-8258-52540000fa 0c@osd.2.service | grep systemd
+
+OSD in out
+
+    ceph osd out 4
+    ceph osd stat
+    ceph osd tree
+    ceph osd df tree
+    hdd 0.00980 osd.4 up 0 1.00000
+    ceph osd in 4
+    ceph osd tree
+    ceph osd df tree
+
+PG stat
+
+    ceph pg stat
+    ceph osd pool create testpool 32 32
+    rados -p testpool put testobject /etc/ceph/ceph.conf
+    ceph osd map testpool testobject
+    osdmap e332 pool 'testpool' (9) object 'testobject' -> pg 9.98824931 (9.11) -> up
+    ([8,2,5], p8) acting ([8,2,5], p8)
+    ceph pg 9.11 query
+    ceph versions
+    ceph tell osd.* version
+    ceph balancer status
+
+## Section 2 - Maintenance
+
+Set the noscrub and nodeep-scrub flags to prevent the cluster from starting scrubbing
+operations temporarily.
+
+    ceph osd set noscrub
+    ceph osd set nodeep-scrub
+    ceph health detail
+
+    ceph osd tree | grep -i down
+    osd.3 down
+    ceph osd find osd.3
+    "osd": 3,
+    "host": "serverd.lab.example.com",
+
+On node serverd
+
+    cephadm shell
+    ceph-volume lvm list
+    systemctl list-units --all "ceph*"
+    journalctl -ru ceph-2ae6d05a-229a-11ec-925e-52540000fa0c@osd.3.service
+    
