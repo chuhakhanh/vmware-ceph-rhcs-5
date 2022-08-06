@@ -70,42 +70,5 @@ Fully provisioning all lab
     prefix = "registry.redhat.io"
     
     podman system info
-    
-### cephadm-ansible on serverc
 
-Login node serverc, install require software to bootstrap ceph cluster
-    
-    yum install -y cephadm-ansible
-    cd /usr/share/cephadm-ansible
-    ssh-keygen
-    chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory
-
-### bootstrap ceph cluster on serverc
-
-### copy initial-config-primary-cluster.yaml to repo-2
-
-From deploy-1
-
-    scp config/initial-config-primary-cluster.yaml repo-2:/data/repos/html/config
-    
-#### bootstrap with a yaml 
-
-Due to Bug 2013215 (https://bugzilla.redhat.com/show_bug.cgi?id=2013215) we have to specify the local private registry into the bootstrap command. 
-
-    podman login repo-2.lab.example.com --username quayadmin --password password
-    cd /root/ceph
-    wget repo-2/config/initial-config-primary-cluster.yaml /root/ceph
-
-    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.103 \
-    --apply-spec=initial-config-primary-cluster.yaml \
-    --initial-dashboard-password=redhat \
-    --dashboard-password-noupdate \
-    --allow-fqdn-hostname \
-    --registry-url=repo-2.lab.example.com \
-    --registry-username=quayadmin \
-    --registry-password=password  \
-    --yes-i-know
-
-### Ceph Operation
-
-[Following steps in docs/ceph.md to work on ceph cluster](docs/ceph.md)
+[Following steps in docs/gudie.md to work on ceph cluster](docs/guide.md)
