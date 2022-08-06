@@ -1,19 +1,11 @@
+{% for host in groups['all'] %}
+{{ if hostvars['host']['ansible_facts']['hostname'] != clientb and hostvars['host']['ansible_facts']['hostname'] != serverg and hostvars['host']['ansible_facts']['hostname'] != serverf }}
 service_type: host
-addr: 10.1.17.101
-hostname: clienta
+addr: {{ hostvars['host']['ansible_facts']['default_ipv4']['address'] }}
+hostname: {{ hostvars['host']['ansible_facts']['hostname'] }}
 ---
-service_type: host
-addr: 10.1.17.103
-hostname: serverc
----
-service_type: host
-addr: 10.1.17.104
-hostname: serverd
----
-service_type: host
-addr: 10.1.17.105
-hostname: servere
----
+{% endfor %}
+
 service_type: mon
 placement:
   hosts:

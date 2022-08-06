@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- hosts: lab
+  gather_facts: true
   tasks:    
 
     - name: Copy host file to etc host
@@ -25,11 +26,13 @@
       copy:
         src: config/2022_07.repo
         dest: /etc/yum.repos.d/
+
     - name: Create a CA directory for podman if it does not exist
       file:
         path: /etc/containers/certs.d/repo-2.lab.example.com/
         state: directory
         mode: '0755'
+
     - name: Copy CA file into 
       get_url:
         url: http://repo-2/config/ca.crt
@@ -43,3 +46,26 @@
           [[registry]]
           location = "repo-2.lab.example.com/quayadmin/lab"
           prefix = "registry.redhat.io"
+
+
+- hosts: bootstrap
+  tasks:
+
+    - name: Create a /root/ceph directory if it does not exist
+      file:
+        path: /root/ceph
+        state: directory
+        mode: '0755'
+
+    - name: Copy ssh_hosts file to /root/ceph host
+      copy:
+        src: config/ssh_hosts
+        dest: /etc/ceph/
+        mode: '0755'
+        
+    - name: initial-config-primary-cluster render
+      template:
+        src: /template/initial-config-primary-cluster.j2
+        dest: /root/ceph/initial-config-primary-cluster.yaml
+        
+    
