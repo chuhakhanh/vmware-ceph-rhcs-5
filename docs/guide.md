@@ -360,8 +360,171 @@ Create a replicated pool and verify object replicas in different Datacenter
 
 # Part 6 - block storage - basic
 
-## Section 1 - rdb
+## Section 1 - rbd
 ## Section 2 - snapshot
 ## Section 3 - import/export 
 
 # Part 7 - block storage - advanced
+
+## Section 1 - rbd mirrors
+
+
+Create prepare mirror 
+On node clienta 
+    
+    ceph osd pool create rbd 32 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+    ceph orch apply rbd-mirror --placement=serverc
+
+On node serverf
+
+    ceph osd pool create rbd 32 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+    
+
+Create pool and mirror pool
+
+On node clienta 
+
+    rbd create image1 --size 1024 --pool rbd --image-feature=exclusive-lock,journaling
+    rbd -p rbd ls
+    rbd --image image1 info
+
+    rbd mirror pool enable rbd pool
+    rbd --image image1 info
+    
+    mkdir /root/mirror
+    cephadm shell --mount /root/mirror/
+    rbd mirror pool peer bootstrap create --site-name primary rbd > /mnt/bootstrap_token_prod
+    rsync -avP /root/mirror/bootstrap_token_prod serverf:/root/bootstrap_token_prod
+
+On node serverf
+
+    cephadm shell --mount /root/bootstrap_token_prod
+    ceph orch apply rbd-mirror --placement=serverf
+    ceph orch ls
+    rbd mirror pool peer bootstrap import --site-name secondary --direction rx-only rbd /mnt/bootstrap_token_prod
+    rbd -p rbd ls
+
+Verify mirror status 
+
+On node clienta, serverf
+    
+    rbd mirror image status rbd/myimage
+    rbd mirror pool info rbd
+    rbd mirror pool status
+
+Test 1: switch the image between cluster
+
+On node clienta
+    rbd mirror image demote rbd/myimage
+    rbd mirror image status rbd/myimage
+
+On node serverf
+    rbd mirror image promote rbd/myimage
+    rbd mirror image status rbd/myimage
+
+Fallback
+
+On node serverf
+    rbd mirror image demote rbd/myimage
+    rbd mirror image status rbd/myimage
+
+On node clienta
+    rbd mirror image promote rbd/myimage
+    rbd mirror image status rbd/myimage
+
+Test 2: remove the image on primary cluster
+
+On node clienta
+
+    rbd rm image1 -p rbd
+    rbd -p rbd ls
+
+On node serverf
+
+    rbd -p rbd ls
+
+
+## Section 2 - iscsi
+
+On node clienta 
+
+    ceph config set osd osd_heartbeat_interval 5
+    ceph config set osd osd_heartbeat_grace 20
+    ceph config set osd osd_client_watch_timeout 15
+
+    vi /etc/ceph/iscsi-gateway.yaml
+    service_type: iscsi
+    service_id: iscsi
+    placement:
+        hosts:
+        - serverc
+        - servere
+    spec:
+        pool: iscsipool1
+        trusted_ip_list: "<ip serverc>,<ip servere>"
+        api_port: 5000
+        api_secure: false
+        api_user: admin
+        api_password: redhat
+    
+    ceph orch apply -i /etc/ceph/iscsi-gateway.yaml
+    ceph dashboard iscsi-gateway-list
+
+Create a target on GUI
+Configure an iSCSI Initiator
+
+    yum install iscsi-initiator-utils device-mapper-multipath
+    mpathconf --enable --with_multipathd y
+    vi /etc/multipath.conf
+    devices {
+        device {
+        vendor "LIO-ORG"
+        hardware _handler "1 alua"
+        path_grouping_policy "failover"
+        path_selector "queue-length 0"
+        failback 60
+        path_checker tur
+        prio alua
+        prio_args exclusive_pref_bit
+        fast_io_fail_tmo 25
+        no_path_retry queue
+        }
+    }
+    systemctl reload multipathd
+    vi /etc/iscsi/iscsid.conf
+    node.session.auth.authmethod = CHAP
+    node.session.auth.username = user
+    node.session.auth.password = password
+    iscsiadm -m discovery -t st -p 10.30.0.210
+    iscsiadm -m node -T iqn.2001-07.com.ceph:1634089632951 -l
+    lsblk
+    multipath -ll
+
+# Part 8 - rgw
+
+## Section 1 - deploy rgw
+
+Create prepare rgw 
+    
+    ceph orch ls
+    ceph orch ls --service-type rgw
+
+Configure rgw service to start 2 RGW instances in serverd and servere, port 8080    
+    
+    vi /tmp/rgw_service.yaml
+    service_type: rgw
+    service_id: myrealm.myzone
+    service_name: rgw.myrealm.myzone
+    placement:
+    count: 4
+        hosts:
+        - serverd.lab.example.com
+        - servere.lab.example.com
+    spec:
+        rgw_frontend_port: 8080
+        
+## Section 2 - deploy rgw - multisite
