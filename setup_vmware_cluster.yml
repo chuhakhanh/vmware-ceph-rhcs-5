@@ -4,14 +4,11 @@
   gather_facts: no
   become: true
   serial: 4
-  tasks:    
-
-    - name: Deploy the lab cluster on VMware environment
+  tasks:     
+    - name: Deploy the cluster on VMware environment
       include: deploy_vmware_cluster.yml
-      when: 
-        - action == "create"
+      when: action == "create"
 
-    - name: Destroy the lab cluster on VMware environment
+    - name: Destroy the cluster on VMware environment
       include: destroy_vmware_cluster.yml
-      when: 
-        - action == "destroy"
+      when: action == "destroy"
