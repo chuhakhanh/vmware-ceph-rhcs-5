@@ -904,8 +904,11 @@ PG stat
 
 ## Section 2 - Maintenance
 
+### Cluster settings
 Set the noscrub and nodeep-scrub flags to prevent the cluster from starting scrubbing
 operations temporarily.
+
+On node clienta
 
     ceph osd set noscrub
     ceph osd set nodeep-scrub
@@ -914,13 +917,138 @@ operations temporarily.
     ceph osd tree | grep -i down
     osd.3 down
     ceph osd find osd.3
-    "osd": 3,
-    "host": "serverd.lab.example.com",
+    "osd": 3, "host": "serverd.lab.example.com",
 
 On node serverd
 
     cephadm shell
     ceph-volume lvm list
+
     systemctl list-units --all "ceph*"
     journalctl -ru ceph-2ae6d05a-229a-11ec-925e-52540000fa0c@osd.3.service
+    systemctl start ceph-2ae6d05a-229a-11ec-925e-52540000fa0c@osd.3.service
+
+    ceph orch daemon start osd.3
+
+ On node clienta
+ 
+    ceph osd unset noscrub
+    ceph osd unset nodeep-scrub
+    ceph -w
+
+### Cluster Scale
+
+Add MON daemon on node serverg
+
+    ceph orch ls --service_type=mon
+    ceph cephadm get-pub-key > ~/ceph.pub
+    ssh-copy-id -f -i ~/ceph.pub root@serverg
+
+Add HOST serverg
+
+    ceph orch host add serverg.lab.example.com
+
+Add MON serverg    
+
+    ceph orch apply mon --placement="clienta.lab.example.com serverc.lab.example.com serverd.lab.example.com servere.lab.example.com serverg.lab.example.com"
+    ceph orch ls --service_type=mon
+    ceph mon stat
+    
+Remove MON serverg    
+    
+    ceph orch apply mon --placement="clienta.lab.example.com serverc.lab.example.com serverd.lab.example.com servere.lab.example.com"
+    ceph orch ls --service_type=mon
+    ceph mon stat
+
+Remove OSD serverg
+
+    ceph orch ps serverg.lab.example.com
+    ceph osd stop 9 10 11
+    ceph osd out 9 10 11
+    ceph osd crush remove osd.9
+    ceph osd crush remove osd.10
+    ceph osd crush remove osd.11
+    ceph osd rm 9 10 11
+
+Remove HOST serverg
+    ceph orch host rm serverg.lab.example.com
+    ceph orch host ls
+
+Maintenance HOST servere
+
+    ceph orch host maintenance enter servere.lab.example.com
+    ceph orch host ls
+    ssh admin@servere sudo reboot # reboot HOST servere
+    ceph orch host maintenance exit servere.lab.example.com
+
+Maintenance OSD
+
+Stop and start OSD
+
+    systemctl start ceph-2ae6d05a-229a-11ec-925e-52540000fa0c@osd.6.service
+    ceph -w
+    ceph osd tree | grep -i down
+    ceph osd find osd.6 | grep host
+    ceph orch daemon start osd.6
+    ceph osd tree | grep osd.6
+
+Out OSD deamon osd.5
+
+    ceph osd out 5
+    ceph -w
+
+Verify that all PGs have been migrated off of the OSD 5 daemon. It will take some time for the data migration to finish
+    
+    ceph osd df
+    ceph osd in 5
+    ceph osd df
+    ceph balancer status
+    
+Object and PG
+
+    ceph osd map pool1 data1
+    (6.1c)` -> up ([8,2,3], p8) acting ([8,2,3], p8)
+    ceph pg 6.1c query
+
+# Part 12 - Tuning
+
+## Section 1 - Performance
+
+### Settings pg_autoscale_mode
+
+    ceph osd pool create testpool
+    ceph health detail
+    ceph osd pool autoscale-status
+    
+    ceph osd pool set testpool pg_autoscale_mode off
+    ceph osd pool set testpool pg_num 8
+    ceph osd pool autoscale-status
+    ceph health detail
+
+Set the PG autoscale option to warn for the pool testpool. Verify that cluster health status is now WARN, because the recommended number of PGs is higher than the current number of PGs.
+
+    ceph osd pool set testpool pg_autoscale_mode warn
+    ceph health detail
+    Pool testpool has 8 placement groups, should have 32
+    
+    ceph osd pool set testpool pg_autoscale_mode on
+    ceph osd pool autoscale-status
+
+### OSD Affinity  
+
+ Modify the primary affinity settings on an OSD so that it is more likely to be selected as primary for placement groups. Set the primary affinity for OSD 7 to 0
+
+    ceph osd primary-affinity 7 0
+    ceph osd tree
+    ceph osd dump | grep affinity
+
+    ceph osd pool create benchpool 100 100
+    rbd pool init benchpool
+    rados -p benchpool bench 30 write
+    ceph osd perf
+    osd commit_latency(ms) apply_latency(ms)
+    7 94 94
+    8 117 117
+    6 195 195
+    ceph tell osd.6 perf dump > perfdump.txt
     
