@@ -41,15 +41,33 @@ Create a Virtual machine cluster
     git checkout lab-7-2022
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab2"
-
+    
 Push public ssh key into this machines due to predefined password (i=lab#)
 
-    chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
+
+    for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10;
+    do
+        chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
+    done
+
+    for i in lab1
+    do
+        chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
+    done
+    
 
 Then apply prequisite for virual machines
 
-    ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
-    
+    for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10;
+    do
+        ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
+    done
+
+    for i in lab1
+    do
+        ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
+    done
+
 
 Fully provisioning all lab
 

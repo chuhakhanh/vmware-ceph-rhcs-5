@@ -8,22 +8,29 @@ Login node serverc, install require software to bootstrap ceph cluster
 run preflight  
 
     ssh-keygen
-    for i in clienta clientb serverc serverd servere serverf serverg; do 
-        ssh-copy-id@$i
+    for i in clienta.lab.example.com clientb.lab.example.com serverc.lab.example.com serverd.lab.example.com servere.lab.example.com serverf.lab.example.com serverg.lab.example.com; do 
+        ssh-copy-id root@$i
     done
 
 run preflight    
 
     yum install -y cephadm-ansible
     cd /usr/share/cephadm-ansible
-    ansible-playbook -i preflight_host_list.txt cephadm-preflight.yml --extra-vars "ceph_origin="
+    vi hosts
+    clienta.lab.example.com
+    serverc.lab.example.com
+    serverd.lab.example.com
+    servere.lab.example.com
+    ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
     
 bootstrap with a yaml 
 
     podman login repo-2.lab.example.com --username quayadmin --password password
     
     cd /root/ceph
-    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=serverc \
+    vi initial-config-primary-cluster.yaml
+
+    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.113 \
     --apply-spec=initial-config-primary-cluster.yaml \
     --initial-dashboard-password=redhat \
     --dashboard-password-noupdate \
@@ -39,7 +46,9 @@ run preflight
 
     yum install -y cephadm-ansible
     cd /usr/share/cephadm-ansible
-    ansible-playbook -i preflight_host_list.txt cephadm-preflight.yml --extra-vars "ceph_origin="
+    vi hosts
+    serverf.lab.example.com
+    ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
 
     podman login repo-2.lab.example.com --username quayadmin --password password
 
@@ -1052,3 +1061,104 @@ Set the PG autoscale option to warn for the pool testpool. Verify that cluster h
     6 195 195
     ceph tell osd.6 perf dump > perfdump.txt
     
+## Section 2 - Tuning performance
+
+    ceph tell osd.0 bluestore allocator score block
+    ceph osd tree
+    ceph tell osd.0 config get osd_max_backfills
+    ceph tell osd.0 config set osd_max_backfills 2
+    ceph tell osd.0 config get osd_recovery_max_active
+    ceph tell osd.0 config get osd_recovery_max_active_hdd
+    ceph tell osd.0 config get osd_recovery_max_active_ssd
+    ceph tell osd.0 config set osd_recovery_max_active 1
+    ceph tell osd.0 config get osd_recovery_max_active
+
+## Section 3 - Troubleshooting
+
+### Fix time issue 
+
+On node serverd stop chroync and change date
+
+    systemctl stop chronyd
+    timedatectl set-date 20092018
+
+On clienta, troubleshooting the status
+
+    systemctl status chronyd
+    ceph health detail
+    sudo systemctl start chronyd
+    systemctl status chronyd
+    ceph health detail
+
+### Fix OSD down issue
+
+On node serverc stop the service osd.0
+
+    sudo systemctl stop ceph-2ae6...fa0c@osd.0.service
+
+On clienta, troubleshooting the status
+
+    ceph health detail
+    ceph osd tree
+    serverc
+    0 hdd 0.00980 osd.0 down 0 1.00000
+    
+On node serverc    
+
+    systemctl list-units --all 'ceph*'
+    ceph-2ae6...fa0c@osd.0.service loaded inactive dead
+   
+    sudo systemctl start ceph-2ae6...fa0c@osd.0.service
+    systemctl status ceph-2ae6...fa0c@osd.0.service
+    ceph osd tree
+    0 hdd 0.00980 osd.0 up 1.00000 1.00000
+
+### Setlog file for OSD
+
+On node servere, change the cluster of osd.4 to make it get problem
+    
+    ceph config set osd.4 cluster_network 192.168.0.0/24
+    ceph orch daemon restart osd.4
+
+On clienta, troubleshooting the status
+
+    ceph osd tree
+    hdd 0.00980 osd.4 down 1.00000 1.00000
+    ceph orch daemon restart osd.4
+    ceph tell osd.4 config show
+
+On node servere, troubleshooting the status
+
+    systemctl list-units --all 'ceph*'
+    sudo systemctl restart ceph-2ae6d05a-229a-11ec-925e-52540000fa0c@osd.4.service
+
+On clienta, set log
+
+    ceph config set osd.4 log_file /var/log/ceph/myosd4.log
+    ceph config set osd.4 log_to_file true
+    ceph config set osd.4 debug_ms 1
+    ceph config set osd.4 debug_ms 1
+
+On node servere, troubleshooting the status
+
+    sudo cat /var/log/ceph/2ae6d05a-229a-11ec-925e-52540000fa0c/myosd4.log
+
+On clienta, change cluster network of osd.4
+
+    ceph config get osd.0 cluster_network
+    172.25.249.0/24
+    ceph config get osd.4 cluster_network
+    192.168.0.0/24
+    ceph config set osd.4 cluster_network 172.25.249.0/24
+    ceph orch daemon restart osd.4
+    ceph osd tree
+
+ ### Set for OSD  
+
+    ceph tell osd.5 config set osd_op_history_size 40
+    ceph tell osd.5 config set osd_op_history_duration 700
+    ceph tell osd.5 dump_historic_ops | head -n 3
+    ceph tell osd.* config set osd_max_backfills 3
+    ceph tell osd.* config set osd_recovery_max_active 1
+    
+
