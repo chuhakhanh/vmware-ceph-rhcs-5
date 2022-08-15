@@ -1,49 +1,49 @@
 service_type: host
-addr: 10.1.17.101
-hostname: clienta
+addr: 10.1.17.111
+hostname: clienta.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.103
-hostname: serverc
+addr: 10.1.17.113
+hostname: serverc.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.104
-hostname: serverd
+addr: 10.1.17.114
+hostname: serverd.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.105
-hostname: servere
+addr: 10.1.17.115
+hostname: servere.lab.example.com
 ---
 service_type: mon
 placement:
   hosts:
-    - clienta
-    - serverc
-    - serverd
-    - servere
+    - clienta.lab.example.com
+    - serverc.lab.example.com
+    - serverd.lab.example.com
+    - servere.lab.example.com
 ---
 service_type: rgw
 service_id: realm.zone
 placement:
   hosts:
-    - serverc
-    - serverd
+    - serverc.lab.example.com
+    - serverd.lab.example.com
 ---
 service_type: mgr
 placement:
   hosts:
-    - clienta
-    - serverc
-    - serverd
-    - servere
+    - clienta.lab.example.com
+    - serverc.lab.example.com
+    - serverd.lab.example.com
+    - servere.lab.example.com
 ---
 service_type: osd
 service_id: default_drive_group
 placement:
   hosts:
-    - serverc
-    - serverd
-    - servere
+    - serverc.lab.example.com
+    - serverd.lab.example.com
+    - servere.lab.example.com
 data_devices:
   paths:
     - /dev/sdb
