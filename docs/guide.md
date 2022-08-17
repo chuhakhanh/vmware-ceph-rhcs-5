@@ -27,10 +27,10 @@ bootstrap with a yaml
 
     podman login repo-2.lab.example.com --username quayadmin --password password
     
-    cd /root/ceph
+    mkdir /root/ceph;cd /root/ceph
     vi initial-config-primary-cluster.yaml
 
-    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=10.1.17.113 \
+    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=<serverc IP> \
     --apply-spec=initial-config-primary-cluster.yaml \
     --initial-dashboard-password=redhat \
     --dashboard-password-noupdate \
@@ -46,15 +46,18 @@ run preflight
 
     yum install -y cephadm-ansible
     cd /usr/share/cephadm-ansible
-    vi hosts
-    serverf.lab.example.com
-    ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
+    echo serverf.lab.example.com > hosts
+    ssh-keygen
+    for i in serverf.lab.example.com; do 
+        ssh-copy-id root@$i
+    done
 
+    ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
     podman login repo-2.lab.example.com --username quayadmin --password password
 
-bootstrap with a yaml    
+bootstrap on a single mon 
 
-    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=serverf \
+    cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=<serverf IP> \
     --initial-dashboard-password=redhat \
     --dashboard-password-noupdate \
     --allow-fqdn-hostname \
@@ -370,9 +373,281 @@ Create a replicated pool and verify object replicas in different Datacenter
 # Part 6 - block storage - basic
 
 ## Section 1 - rbd
+
+### Prepare
+On clienta
+
+    ceph osd pool create test_pool 32 32
+    rbd pool init test_pool
+    ceph df
+    ceph auth get-or-create client.test_pool.clientb mon 'profile rbd' osd 'profile rbd' -o /etc/ceph/ceph.client.test_pool.clientb.keyring
+    cat /etc/ceph/ceph.client.test_pool.clientb.keyring
+    ceph auth get client.test_pool.clientb
+
+On clientb
+
+    yum install -y ceph-common
+    [ceph: root@clienta /]# scp /etc/ceph/{ceph.conf,ceph.client.test_pool.clientb.keyring} root@clientb:/etc/ceph
+    export CEPH_ARGS='--id=test_pool.clientb'
+    rbd ls test_pool
+
+ ### Mount online a rbd volume
+
+    rbd create test_pool/test --size=128M
+    rbd ls test_pool
+    rbd info test_pool/test
+    [root@clientb ~]# rbd map test_pool/test
+    /dev/rbd0
+    rbd showmapped
+    mkfs.xfs /dev/rbd0
+    mkdir /mnt/rbd
+    mount /dev/rbd0 /mnt/rbd
+    chown admin:admin /mnt/rbd
+    df /mnt/rbd
+    dd if=/dev/zero of=/mnt/rbd/test1 bs=10M count=1
+    ls /mnt/rbd
+    df /mnt/rbd
+    ceph df
+    umount /mnt/rbd
+    rbd unmap /dev/rbd0
+    rbd showmapped
+
+### Mount on a /etc/fstab
+
+    [root@clientb ~]# cat /etc/ceph/rbdmap
+    # RbdDevice                     Parameters
+    #poolname/imagename             id=client,keyring=/etc/ceph/ceph.client.keyring
+    test_pool/test                  id=test_pool.clientb,keyring=/etc/ceph/ceph.client.test_pool.clientb.keyring
+
+    cat /etc/fstab
+    /dev/rbd/test_pool/test /mnt/rbd xfs noauto 0 0
+    
+    rbdmap map
+    rbd showmapped
+    rbdmap unmap
+    rbd showmapped
+    systemctl enable rbdmap
+    reboot
+    df /mnt/rbd
+    ceph df
+
+    rbdmap unmap
+    df | grep rbd
+    rbd showmapped
+    cat /etc/fstab
+    # /dev/rbd/test_pool/test /mnt/rbd xfs noauto 0 0
+    cat /etc/ceph/rbdmap
+    # test_pool/test                  id=test_pool.clientb,keyring=/etc/ceph/ceph.client.test_pool.clientb.keyring
+    rbd rm test_pool/test --id test_pool.clientb
+    rados -p test_pool ls --id test_pool.clientb
+
 ## Section 2 - snapshot
+
+### Test image and snapshot on 2 client
+
+On node clienta
+
+    [root@clienta ~]# rbd map --pool rbd image1
+    /dev/rbd0
+    mkfs.xfs /dev/rbd0
+
+Confirm that the /dev/rbd0 device is writable.
+
+    [root@clienta ~]# blockdev --getro /dev/rbd0
+    0
+    rbd snap create rbd/image1@firstsnap
+    rbd disk-usage --pool rbd image1
+    NAME PROVISIONED USED
+    image1@firstsnap 128 MiB 36 MiB
+    image1 128 MiB 36 MiB
+    <TOTAL> 128 MiB 72 MiB
+
+On node clientb
+
+    export CEPH_ARGS='--id=rbd.clientb'
+    rbd map --pool rbd image1@firstsnap
+    [root@clientb ~]# rbd map --pool rbd image1@firstsnap
+    /dev/rbd0
+    rbd showmapped
+
+Confirm that /dev/rbd0 is a read-only block device
+
+    [root@clientb ~]# blockdev --getro /dev/rbd0
+    1
+
+On node clienta
+Write data
+
+    mount /dev/rbd0 /mnt/image
+    cp /etc/ceph/ceph.conf /mnt/image/file0
+    df /mnt/image/
+    Filesystem 1K-blocks Used Available Use% Mounted on
+    /dev/rbd0 123584 7944 115640 7% /mnt/image
+
+On node clientb
+Check snapshot blockdevice
+
+    mount /dev/rbd0 /mnt/snapshot/
+    df /mnt/snapshot/
+    Filesystem 1K-blocks Used Available Use% Mounted on
+    /dev/rbd0 123584 480 123104 1% /mnt/snapshot
+    
+    ls -l /mnt/snapshot/
+    umount /mnt/snapshot
+    rbd unmap --pool rbd image1@firstsnap
+    rbd showmapped
+
+### Test image and clone on 2 client
+
+On node clienta
+
+    rbd snap protect rbd/image1@firstsnap
+    rbd clone rbd/image1@firstsnap rbd/clone1
+    rbd children rbd/image1@firstsnap
+    rbd/clone1
+
+On node clientb
+
+    rbd map --pool rbd clone1
+    /dev/rbd0
+    mount /dev/rbd0 /mnt/clone
+    dd if=/dev/zero of=/mnt/clone/file1 bs=1M count=10
+    ls -l /mnt/clone/
+
+Clean up
+
+On node clientb
+
+    umount /mnt/clone
+    rbd unmap --pool rbd clone1
+    rbd showmapped
+    unset CEPH_ARGS
+
+On node clienta
+
+    umount /mnt/image
+    rbd unmap --pool rbd image1
+    rbd showmapped
+
+
+
 ## Section 3 - import/export 
 
+On node clienta ( cluster 1)
+
+    ceph osd pool create rbd 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+
+On node serverf ( cluster 2)
+
+    ceph osd pool create rbd 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+    rbd create test --size 128 --pool rbd
+
+### export an image
+
+On node clienta ( cluster 1)
+
+    rbd map --pool rbd test
+    mkfs.xfs /dev/rbd0
+    mount /dev/rbd0 /mnt/rbd
+    cp /etc/ceph/ceph.conf /mnt/rbd/file0
+    umount /mnt/rbd
+
+    rbd export rbd/test /mnt/export.dat
+    rsync -avP /home/admin/rbd-export/export.dat serverf:/home/admin/rbd-import
+
+On node serverf ( cluster 2)  
+ 
+    rbd --pool rbd ls
+    rbd import /mnt/export.dat rbd/test
+    rbd du --pool rbd test
+
+    rbd map --pool rbd test
+    mount /dev/rbd0 /mnt/rbd
+    df -h /mnt/rbd
+    cat /mnt/rbd/file0
+    umount /mnt/rbd
+    rbd unmap /dev/rbd0
+
+### export an image snapshot
+
+On node clienta ( cluster 1)
+
+    rbd snap create rbd/test@firstsnap
+
+On node serverf ( cluster 2)
+
+    rbd snap create rbd/test@firstsnap
+
+On node clienta ( cluster 1)
+
+    mount /dev/rbd0 /mnt/rbd
+    dd if=/dev/zero of=/mnt/rbd/file1 bs=1M count=5
+    rbd du --pool rbd test
+    ls -l /mnt/rbd/
+    umount /mnt/rbd
+
+    [ceph: root@clienta /]# rbd du --pool rbd test
+    NAME PROVISIONED USED
+    test@firstsnap 128 MiB 36 MiB
+    test 128 MiB 40 MiB
+    <TOTAL> 128 MiB 76 MiB
+    
+    [ceph: root@clienta /]# rbd snap create rbd/test@secondsnap
+    Creating snap: 100% complete...done.
+    
+    [ceph: root@clienta /]# rbd du --pool rbd test
+    NAME PROVISIONED USED
+    test@firstsnap 128 MiB 36 MiB
+    test@secondsnap 128 MiB 40 MiB
+    test 128 MiB 12 MiB
+    <TOTAL> 128 MiB 88 MiB
+    
+    cephadm shell --mount /home/admin/rbd-export/
+    rbd export-diff --from-snap firstsnap rbd/test@secondsnap /mnt/export-diff.dat
+    rsync -avP /home/admin/rbd-export/export-diff.dat serverf:/home/admin/rbd-import
+
+On node serverf ( cluster 2)
+
+    [ceph: root@serverf /]# rbd du --pool rbd test
+    NAME PROVISIONED USED
+    test@firstsnap 128 MiB 32 MiB
+    test 128 MiB 32 MiB
+    <TOTAL> 128 MiB 64 MiB
+    
+    rbd import-diff /mnt/rbd-import/export-diff.dat rbd/test
+    
+    rbd du --pool rbd test
+    NAME PROVISIONED USED
+    test@firstsnap 128 MiB 32 MiB
+    test@secondsnap 128 MiB 32 MiB
+    test 128 MiB 8 MiB
+    <TOTAL> 128 MiB 72 MiB
+
+    rbd map --pool rbd test
+    mount /dev/rbd0 /mnt/rbd
+    df /mnt/rbd
+    ls -l /mnt/rbd
+    total 5124
+    -rw-r--r--. 1 admin users 177 Sep 30 22:02 file0
+    -rw-r--r--. 1 admin users 5242880 Sep 30 23:15 file1
+
+Cleanup
+
+On node clienta ( cluster 1)
+
+    rbd unmap /dev/rbd0
+    rbd --pool rbd snap purge test
+    rbd rm test --pool rbd
+
+On node serverf ( cluster 2)
+
+    rbd unmap /dev/rbd0
+    rbd --pool rbd snap purge test
+    rbd rm test --pool rbd
 # Part 7 - block storage - advanced
 
 ## Section 1 - rbd mirrors

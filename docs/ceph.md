@@ -36,7 +36,10 @@ In case, node exporter is set to redhat registry. We need to reconfigure image b
     ceph config set mgr mgr/cephadm/container_image_prometheus repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus
     ceph config set mgr mgr/cephadm/container_image_grafana repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-dashboard-rhel8
     ceph config set mgr mgr/cephadm/container_image_node_exporter repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-node-exporter
-    for i in {container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};do ceph config get mgr mgr/cephadm/$i ;done  
+    for i in {container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};
+    do 
+        ceph config get mgr mgr/cephadm/$i ;
+    done  
     ceph orch redeploy node-exporter
 
     ceph log last cephadm
