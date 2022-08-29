@@ -3,7 +3,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -43,7 +43,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -83,7 +83,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -123,7 +123,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -163,7 +163,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -203,7 +203,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
@@ -243,7 +243,7 @@ vms:
     cluster_name: OPS
     esxi_hostname: 10.1.17.12
     disk:
-    - size_gb: 10
+    - size_gb: 30
       type: thin
       datastore: node2-sata1
     
