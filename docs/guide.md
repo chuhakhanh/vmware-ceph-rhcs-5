@@ -150,7 +150,70 @@ Disable by service and test remove an OSD
     ceph orch apply osd --all-available-devices --unmanaged=true
 
 ## Section 2 - pool
+
+    ceph osd lspools
+    ceph osd pool create replpool1 64 64
+    ceph osd pool get replpool1 pg_autoscale_mode
+    ceph config get mon osd_pool_default_pg_autoscale_mode
+
+    ceph osd pool autoscale-status
+    ceph osd pool set replpool1 size 4
+    ceph osd pool set replpool1 min_size 2
+    ceph osd pool application enable replpool1 rbd
+    ceph osd pool ls detail
+    ceph osd pool get replpool1 size
+
+    ceph osd pool rename replpool1 newpool
+    ceph osd pool delete newpool
+    ceph tell mon.* config set mon_allow_pool_delete true
+
+    ceph osd erasure-code-profile ls
+    ceph osd erasure-code-profile get default
+    ceph osd erasure-code-profile set ecprofile-k4-m2 k=4 m=2
+
+    ceph osd pool create ecpool1 64 64 ecprofile-k4-m2
+    ceph osd pool application enable ecpool1 rgw
+    ceph osd pool ls detail
+    ceph osd pool set ecpool1 allow_ec_overwrites true
+    ceph osd pool delete ecpool1 ecpool1 --yes-i-really-really-mean-it
+
 ## Section 3 - authentication   
+
+    export CEPH_ARGS="--id cephuser"
+
+Ceph command authenticates as client.operator3
+
+    ceph --id operator3 osd lspools
+    ceph auth get-or-create client.formyapp1 mon 'allow r' osd 'allow rw
+
+    ceph auth get-or-create client.forrbd mon 'profile rbd' osd 'profile rbd'
+    ceph auth get-or-create client.formyapp2 mon 'allow r' osd 'allow rw pool=myapp'
+    ceph auth get-or-create client.formyapp3 mon 'allow r' osd 'allow rw object_prefix pref'
+    ceph auth get-or-create client.designer mon 'allow r' osd 'allow rw namespace=photos'
+    ceph fs authorize cephfs client.webdesigner /webcontent rw
+    ceph auth get client.webdesigner
+    ceph auth get-or-create client.operator1 mon 'allow r, allow command "auth get-or-create", allow command "auth list"'
+
+    ceph auth list
+    ceph auth get client.admin
+    ceph auth export client.operator1 > ~/operator1.export
+    ceph auth import -i ~/operator1.export
+
+    ceph auth get-or-create client.app1 mon 'allow r' osd 'allow rw' -o /etc/ceph/ceph.client.app1.keyring
+    ceph auth caps client.app1 mon 'allow r' osd 'allow rw pool=myapp'
+    ceph auth caps client.app1 osd ''
+
+    cephadm shell -- ceph auth get-or-create client.docedit mon 'allow r' osd 'allow rw pool=replpool1 namespace=docs' | sudo tee /etc/ceph/ceph.client.docedit.keyring
+    cephadm shell -- ceph auth get-or-create client.docget mon 'allow r' osd 'allow r pool=replpool1 namespace=docs' | sudo tee /etc/ceph/ceph.client.docget.keyring
+
+    cephadm shell --mount /etc/ceph/:/etc/ceph
+    rados --id docedit -p replpool1 -N docs put adoc /etc/hosts
+    rados --id docget -p replpool1 -N docs get adoc /tmp/test
+    rados --id docget -p replpool1 -N docs put mywritetest /etc/hosts
+
+    ceph auth caps client.docget mon 'allow r' osd 'allow rw pool=replpool1 namespace=docs, allow rw pool=docarchive'
+    rados --id docget -p replpool1 -N docs put mywritetest /etc/hosts
+
 
 # Part 5 - storage map
 
@@ -1007,7 +1070,6 @@ On clienta as ceph admin
 
 On clienta as cephfs client - admin user
 
-
     yum install ceph-common
     mkdir /mnt/mycephfs
     [root@clienta ~]# ls -l /etc/ceph
@@ -1048,9 +1110,6 @@ On clienta as cephfs client - restricted user
     Permission denied
     touch /mnt/mycephfs/dir2/restricteduser_file2
     umount /mnt/mycephfs
-
-
-
 ### cephfuse
 
 On clienta as cephfs client - restricted user
