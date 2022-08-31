@@ -1,0 +1,10 @@
+service_type: osd
+service_id: default_drive_group
+placement:
+  hosts:
+    - serverf.lab.example.com
+data_devices:
+  paths:
+    - /dev/sdb
+    - /dev/sdc
+    - /dev/sdd

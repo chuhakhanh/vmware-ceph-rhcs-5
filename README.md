@@ -41,7 +41,7 @@ Create a Virtual machine cluster
     git checkout lab-7-2022
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab1"
-    
+    ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab2"
 Push public ssh key into this machines due to predefined password (i=lab#)
 
 
@@ -55,7 +55,8 @@ Push public ssh key into this machines due to predefined password (i=lab#)
         chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
     done
     
-
+    sshpass -p "alo1234" ssh-copy-id -f -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no root@10.1.17.117
+    
 Then apply prequisite for virual machines
 
     for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10;

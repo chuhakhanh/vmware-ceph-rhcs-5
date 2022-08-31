@@ -57,15 +57,9 @@
         state: directory
         mode: '0755'
 
-    - name: Copy ssh_hosts file to /root/ceph host
-      copy:
-        src: config/ssh_hosts
-        dest: /etc/ceph/
-        mode: '0755'
-        
     - name: initial-config-primary-cluster render
       template:
-        src: /template/initial-config-primary-cluster.j2
-        dest: /root/ceph/initial-config-primary-cluster.yaml
+        src: ./config/initial-config-primary-cluster.yaml
+        dest: /root/ceph/
         
     

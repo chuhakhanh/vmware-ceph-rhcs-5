@@ -8,6 +8,7 @@ Login node serverc, install require software to bootstrap ceph cluster
 run preflight  
 
     ssh-keygen
+
     for i in clienta.lab.example.com clientb.lab.example.com serverc.lab.example.com serverd.lab.example.com servere.lab.example.com serverf.lab.example.com serverg.lab.example.com; do 
         ssh-copy-id root@$i
     done
@@ -48,9 +49,8 @@ run preflight
     cd /usr/share/cephadm-ansible
     echo serverf.lab.example.com > hosts
     ssh-keygen
-    for i in serverf.lab.example.com; do 
-        ssh-copy-id root@$i
-    done
+    ssh-copy-id -i /root/.ssh/id_rsa.pub root@serverf.lab.example.com
+
 
     ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
     podman login repo-2.lab.example.com --username quayadmin --password password
@@ -70,32 +70,63 @@ bootstrap on a single mon
 
 ### add OSD daemon by CLI
 
+On node serverf, add OSD deamon to cluster by service specification file /var/lib/ceph/osd/osd_spec.yml
+    
+    ceph orch device ls    
+    ceph orch ls
+    vi /var/lib/ceph/osd/osd_spec.yml
+    ceph orch apply -i /var/lib/ceph/osd/osd_spec.yml
+    ceph status
+    
 On node serverf, add OSD deamon to cluster by CLI 
 
-    cephadm shell -- ceph orch daemon add osd serverc:/dev/sdb
-    cephadm shell -- ceph orch daemon add osd serverc:/dev/sdc
-    cephadm shell -- ceph orch daemon add osd serverc:/dev/sdd
+    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sde
+    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sdf
 
-On node serverf, add OSD deamon to cluster by service specification file /tmp/osd-spec.yaml
+### telemetry
 
-    service_type: osd
-    service_id: default_drive_group
-    placement:
-    hosts:
-    - serverf
-    data_devices:
-    paths:
-    - /dev/vde
-    - /dev/vdf
+Enable telemetry after bootstrap
+In case, node exporter is set to redhat registry. We need to reconfigure image base and re-deploy node-expoter and alertmanager
 
-    ceph orch apply -i /tmp/osd-spec.yaml
-    ceph status
+    ceph config set mgr mgr/cephadm/container_image_base repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8
+    ceph config set mgr mgr/cephadm/container_image_alertmanager repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-alertmanager
+    ceph config set mgr mgr/cephadm/container_image_prometheus repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus
+    ceph config set mgr mgr/cephadm/container_image_grafana repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-dashboard-rhel8
+    ceph config set mgr mgr/cephadm/container_image_node_exporter repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-node-exporter
+    for i in {container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};
+    do 
+        ceph config get mgr mgr/cephadm/$i ;
+    done  
+    ceph orch redeploy node-exporter
 
+    ceph log last cephadm
+    ceph telemetry on --license sharing-1-0
+
+Disable Monitoring
+To disable monitoring and remove the software that supports it, run the following commands:
+    
+    ceph orch rm grafana
+    ceph orch rm prometheus --force
+    ceph orch rm node-exporter
+    ceph orch rm alertmanager
+    ceph mgr module disable prometheus
+
+To redeploy the monitoring run:
+
+    ceph mgr module enable prometheus
+    ceph orch apply node-exporter '*'
+    ceph orch apply alertmanager 1
+    ceph orch apply prometheus 1
+    ceph orch apply grafana 1
 # Part 3 - configure cluster    
 ## Section 1 - configuration settings
 
-On the clienta perform
+On the serverc perform config cluster configuration file for clienta
+    
+    cd /etc/ceph/
+    scp ceph.conf  ceph.client.admin.keyring clienta:/etc/ceph
 
+On the clienta perform, config cluster configuration file 
     ceph config dump
 
 ### Config settings debug_ms for OSD daemon
