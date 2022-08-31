@@ -26,41 +26,7 @@ Ceph Dashboard
     ceph device ls
 
 
-### telemetry
 
-Enable telemetry after bootstrap
-In case, node exporter is set to redhat registry. We need to reconfigure image base and re-deploy node-expoter and alertmanager
-
-    ceph config set mgr mgr/cephadm/container_image_base repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8
-    ceph config set mgr mgr/cephadm/container_image_alertmanager repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-alertmanager
-    ceph config set mgr mgr/cephadm/container_image_prometheus repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus
-    ceph config set mgr mgr/cephadm/container_image_grafana repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-dashboard-rhel8
-    ceph config set mgr mgr/cephadm/container_image_node_exporter repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-node-exporter
-    for i in {container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};
-    do 
-        ceph config get mgr mgr/cephadm/$i ;
-    done  
-    ceph orch redeploy node-exporter
-
-    ceph log last cephadm
-    ceph telemetry on --license sharing-1-0
-
-Disable Monitoring
-To disable monitoring and remove the software that supports it, run the following commands:
-    
-    ceph orch rm grafana
-    ceph orch rm prometheus --force
-    ceph orch rm node-exporter
-    ceph orch rm alertmanager
-    ceph mgr module disable prometheus
-
-To redeploy the monitoring run:
-
-    ceph mgr module enable prometheus
-    ceph orch apply node-exporter '*'
-    ceph orch apply alertmanager 1
-    ceph orch apply prometheus 1
-    ceph orch apply grafana 1
 
 ### MON 
 #### Add Mon on serverd, servere   
