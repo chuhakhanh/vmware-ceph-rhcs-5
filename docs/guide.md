@@ -97,8 +97,14 @@ In case, node exporter is set to redhat registry. We need to reconfigure image b
     do 
         ceph config get mgr mgr/cephadm/$i ;
     done  
-    ceph orch redeploy node-exporter
 
+On node clienta, serverc, serverd, serverf
+
+    podman login repo-2.lab.example.com --username quayadmin --password password 
+
+On node clienta
+
+    ceph orch redeploy node-exporter
     ceph log last cephadm
     ceph telemetry on --license sharing-1-0
 
@@ -160,23 +166,50 @@ On node clienta
 On clienta
 
     ceph device ls
-    
+    ceph osd tree
     ceph orch device ls | awk /server/ | grep Yes
     ceph orch device ls --wide --refresh
 ### Using CLi to add OSD daemon
 
+On clienta
+
+    ceph orch daemon add osd serverc.lab.example.com:/dev/sde
+    ceph orch daemon add osd serverc.lab.example.com:/dev/sdf
+    ceph orch ps | grep -ie osd.9 -ie osd.10
+    ceph df
+    ceph osd tree
+
+    
 ### Using spec to add OSD daemon
 
 The effect of ceph orch apply is persistent which means that the Orchestrator automatically finds the device, adds it to the cluster, and creates new OSDs. This occurs under the following conditions:
-New disks or drives are added to the system.
-Existing disks or drives are zapped.
-An OSD is removed and the devices are zapped.
+- New disks or drives are added to the system.
+- Existing disks or drives are zapped.
+- An OSD is removed and the devices are zapped.
+
 
 Add by service and test remove an OSD
 
     ceph orch apply osd --all-available-devices
+    ceph orch ls
+    ceph osd tree
+    ceph orch ls --service-type osd --format yaml
 
-Disable by service and test remove an OSD
+Remove the OSD at servere.lab.example.com:sde
+
+    ceph device ls | grep 'servere.lab.example.com:sde'
+    ceph orch daemon stop osd.11
+    ceph orch daemon rm osd.11 --force
+    ceph osd rm 11
+    ceph osd crush rm osd.11
+    ceph orch osd rm status
+    ceph osd tree
+
+Zap the /dev/sde device on servere. Verify that the Orchestrator service re-adds the OSD daemon correctly
+
+    ceph orch device zap --force servere.lab.example.com /dev/sde
+    ceph orch device ls | awk /servere/
+### Disable by service and test remove an OSD
 
     ceph orch apply osd --all-available-devices --unmanaged=true
 
@@ -196,7 +229,10 @@ Disable by service and test remove an OSD
 
     ceph osd pool rename replpool1 newpool
     ceph osd pool delete newpool
+    ceph osd pool delete newpool newpool --yes-i-really-really-mean-it
+    ceph tell mon.* config get mon_allow_pool_delete 
     ceph tell mon.* config set mon_allow_pool_delete true
+    ceph osd pool delete newpool newpool --yes-i-really-really-mean-it
 
     ceph osd erasure-code-profile ls
     ceph osd erasure-code-profile get default

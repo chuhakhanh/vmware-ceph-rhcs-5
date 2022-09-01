@@ -30,6 +30,12 @@ repo-2 is a webserver contains, QuayIO server:
 - :443/ : images to deploy
 
 ## Setup cluster
+
+### Prepare the template Virtual machine
+
+    Edit Settings>VM Options>Advanced>Edit Configuration in Configuration Parameters>Add parameter
+    disk.EnableUUID = TRUE
+          
 ### Deploy virtual machines cluster
 
 From deploy-1 
