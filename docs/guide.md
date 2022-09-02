@@ -66,24 +66,9 @@ bootstrap on a single mon
     --registry-password=password  \
     --yes-i-know
 
-## Section 2 - expand ceph cluster
+### Post installation
 
-### add OSD daemon by CLI
-
-On node serverf, add OSD deamon to cluster by service specification file /var/lib/ceph/osd/osd_spec.yml
-    
-    ceph orch device ls    
-    ceph orch ls
-    vi /var/lib/ceph/osd/osd_spec.yml
-    ceph orch apply -i /var/lib/ceph/osd/osd_spec.yml
-    ceph status
-    
-On node serverf, add OSD deamon to cluster by CLI 
-
-    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sde
-    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sdf
-
-### telemetry
+#### Edit mgr config 
 
 Enable telemetry after bootstrap
 In case, node exporter is set to redhat registry. We need to reconfigure image base and re-deploy node-expoter and alertmanager
@@ -124,6 +109,24 @@ To redeploy the monitoring run:
     ceph orch apply alertmanager 1
     ceph orch apply prometheus 1
     ceph orch apply grafana 1
+
+## Section 2 - expand ceph cluster
+
+### add OSD daemon by CLI
+
+On node serverf, add OSD deamon to cluster by service specification file /var/lib/ceph/osd/osd_spec.yml
+    
+    ceph orch device ls    
+    ceph orch ls
+    vi /var/lib/ceph/osd/osd_spec.yml
+    ceph orch apply -i /var/lib/ceph/osd/osd_spec.yml
+    ceph status
+    
+On node serverf, add OSD deamon to cluster by CLI 
+
+    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sde
+    cephadm shell -- ceph orch daemon add osd serverf.lab.example.com:/dev/sdf
+
 # Part 3 - configure cluster    
 ## Section 1 - configuration settings
 
@@ -164,7 +167,8 @@ On node clienta
 
 ## Section 1 - bluestore with lvm
 On clienta
-
+    
+    udevadm info /dev/sda
     ceph device ls
     ceph osd tree
     ceph orch device ls | awk /server/ | grep Yes
@@ -248,34 +252,16 @@ Zap the /dev/sde device on servere. Verify that the Orchestrator service re-adds
 
     export CEPH_ARGS="--id cephuser"
 
-Ceph command authenticates as client.operator3
+On clienta
 
-    ceph --id operator3 osd lspools
-    ceph auth get-or-create client.formyapp1 mon 'allow r' osd 'allow rw
-
-    ceph auth get-or-create client.forrbd mon 'profile rbd' osd 'profile rbd'
-    ceph auth get-or-create client.formyapp2 mon 'allow r' osd 'allow rw pool=myapp'
-    ceph auth get-or-create client.formyapp3 mon 'allow r' osd 'allow rw object_prefix pref'
-    ceph auth get-or-create client.designer mon 'allow r' osd 'allow rw namespace=photos'
-    ceph fs authorize cephfs client.webdesigner /webcontent rw
-    ceph auth get client.webdesigner
-    ceph auth get-or-create client.operator1 mon 'allow r, allow command "auth get-or-create", allow command "auth list"'
-
-    ceph auth list
-    ceph auth get client.admin
-    ceph auth export client.operator1 > ~/operator1.export
-    ceph auth import -i ~/operator1.export
-
-    ceph auth get-or-create client.app1 mon 'allow r' osd 'allow rw' -o /etc/ceph/ceph.client.app1.keyring
-    ceph auth caps client.app1 mon 'allow r' osd 'allow rw pool=myapp'
-    ceph auth caps client.app1 osd ''
-
+    ceph osd pool create replpool1 64 64
     cephadm shell -- ceph auth get-or-create client.docedit mon 'allow r' osd 'allow rw pool=replpool1 namespace=docs' | sudo tee /etc/ceph/ceph.client.docedit.keyring
     cephadm shell -- ceph auth get-or-create client.docget mon 'allow r' osd 'allow r pool=replpool1 namespace=docs' | sudo tee /etc/ceph/ceph.client.docget.keyring
 
     cephadm shell --mount /etc/ceph/:/etc/ceph
     rados --id docedit -p replpool1 -N docs put adoc /etc/hosts
     rados --id docget -p replpool1 -N docs get adoc /tmp/test
+    cat /tmp/test
     rados --id docget -p replpool1 -N docs put mywritetest /etc/hosts
 
     ceph auth caps client.docget mon 'allow r' osd 'allow rw pool=replpool1 namespace=docs, allow rw pool=docarchive'
@@ -284,58 +270,84 @@ Ceph command authenticates as client.operator3
 
 # Part 5 - storage map
 
+## Prepare
+
+    Remove the OSD at ceph cluster
+    
+    for id in 9 10 12 13 14 15 16 17 18 19
+    do
+        ceph orch daemon stop osd.$id
+        ceph orch daemon rm osd.$id --force
+        ceph osd rm $id
+        ceph osd crush rm osd.$id
+    done 
+    
+    ceph orch osd rm status
+    ceph osd tree
 ## Section 1 - crush map
 On clienta
 
 Created class ssd with id 1 to crush map 
-
+    
+    ceph osd crush class ls
     ceph osd crush class create hdd 
     ceph osd crush class create ssd 
-    ceph osd crush class ls
-
+    
 Set new device class to "ssd" on serverc, serverd, servere
 
-    id=7
+    for id in 6 7 8
+    do
     ceph osd crush rm-device-class osd.$id
     ceph osd crush set-device-class ssd osd.$id
-
+    done
 
 ### Create crush rule with pool belong ssd 
 
+    
+    [root@clienta /root]# ceph osd tree
+    ID  CLASS  WEIGHT   TYPE NAME         STATUS  REWEIGHT  PRI-AFF
+    -1         0.08817  root default                               
+    -9               0      host clienta                           
+    -5         0.02939      host serverc                           
+    0    hdd  0.00980          osd.0         up   1.00000  1.00000
+    4    hdd  0.00980          osd.4         up   1.00000  1.00000
+    7    ssd  0.00980          osd.7         up   1.00000  1.00000
+    -7         0.02939      host serverd                           
+    1    hdd  0.00980          osd.1         up   1.00000  1.00000
+    5    hdd  0.00980          osd.5         up   1.00000  1.00000
+    6    ssd  0.00980          osd.6         up   1.00000  1.00000
+    -3         0.02939      host servere                           
+    2    hdd  0.00980          osd.2         up   1.00000  1.00000
+    3    hdd  0.00980          osd.3         up   1.00000  1.00000
+    8    ssd  0.00980          osd.8         up   1.00000  1.00000
+
 Create a crush rule by command line
 
-    ceph osd crush rule create-replicated onssd default host ssd
     ceph osd crush rule ls
-
-    ceph osd crush tree
-    ID CLASS WEIGHT TYPE NAME
-    -1 0.08817 root default
-    -3 0.02939 host serverc
-    0 hdd 0.00980 osd.0
-    2 hdd 0.00980 osd.2
-    1 ssd 0.00980 osd.1
-    -5 0.02939 host serverd
-    3 hdd 0.00980 osd.3
-    7 hdd 0.00980 osd.7
-    5 ssd 0.00980 osd.5
-    -7 0.02939 host servere
-    4 hdd 0.00980 osd.4
-    8 hdd 0.00980 osd.8
-    6 ssd 0.00980 osd.6
-
-Create a pool 
-
+    ceph osd crush rule create-replicated onssd default host ssd
     ceph osd pool create myfast 32 32 onssd
     ceph osd lspools
-    6 myfast
+    8 myfast
 
-    ceph pg dump pgs_brief
-    PG_STAT STATE UP UP_PRIMARY ACTING ACTING_PRIMARY
-    6.1b active+clean [6,5,1] 6 [6,5,1] 6
+    [root@clienta /root]# ceph pg dump pgs_brief | grep "^8."
+    dumped pgs_brief
+    8.4      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.7      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.6      active+clean  [6,8,7]           6  [6,8,7]               6
+    8.1      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.0      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.3      active+clean  [6,7,8]           6  [6,7,8]               6
+    8.2      active+clean  [8,6,7]           8  [8,6,7]               8
+    8.d      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.c      active+clean  [7,8,6]           7  [7,8,6]               7
+    8.f      active+clean  [6,7,8]           6  [6,7,8]               6
 
 ### Create crush rule with pool with 1 ssd and 2 osd
+On clienta
+    
+    yum install ceph-base
 
-Create a tree structure
+Create a tree structure to move SSD to a node hostc
 
     ceph osd crush add-bucket default-cl260 root
     ceph osd crush add-bucket rack1 rack
@@ -351,74 +363,77 @@ Create a tree structure
     ceph osd crush move hostc rack=rack1
     ceph osd crush move hostd rack=rack2
     ceph osd crush move hoste rack=rack3
-    ceph osd crush move hostd rack=rack2
-
-    [ceph: root@clienta /]# ceph osd crush tree
-    ID CLASS WEIGHT TYPE NAME
-    ID CLASS WEIGHT TYPE NAME
-    -13 0 root default-cl260
-    -14 0 rack rack1
-    -15 0 host hostc
-    -16 0 rack rack2
-    -17 0 host hostd
-    -18 0 rack rack3
-    -19 0 host hoste
-    -1 0.08817 root default
-    -3 0.02939 host serverc
-    0 hdd 0.00980 osd.0
-    2 hdd 0.00980 osd.2
-    1 ssd 0.00980 osd.1
-    -5 0.02939 host serverd
-    3 hdd 0.00980 osd.3
-    7 hdd 0.00980 osd.7
-    5 ssd 0.00980 osd.5
-    -7 0.02939 host servere
-    4 hdd 0.00980 osd.4
-    8 hdd 0.00980 osd.8
-    6 ssd 0.00980 osd.6
-
-    ceph osd crush set osd.1 1.0 root=default-cl260 rack=rack1 host=hostc
-    ceph osd crush set osd.5 1.0 root=default-cl260 rack=rack1 host=hostc
-    ceph osd crush set osd.6 1.0 root=default-cl260 rack=rack1 host=hostc
-    ceph osd crush set osd.3 1.0 root=default-cl260 rack=rack2 host=hostd
-    ceph osd crush set osd.0 1.0 root=default-cl260 rack=rack2 host=hostd
-    ceph osd crush set osd.4 1.0 root=default-cl260 rack=rack2 host=hostd
-    ceph osd crush set osd.2 1.0 root=default-cl260 rack=rack3 host=hoste
-    ceph osd crush set osd.7 1.0 root=default-cl260 rack=rack3 host=hoste
-    ceph osd crush set osd.8 1.0 root=default-cl260 rack=rack3 host=hoste
+    ceph osd crush move hostd rack=rack2 
     
-    ceph osd crush tree
-    [ceph: root@clienta /]# ceph osd crush tree
-    ID CLASS WEIGHT TYPE NAME
-    -13 9.00000 root default-cl260
-        -14 3.00000 rack rack1
-        -15 3.00000 host hostc
-                1 ssd 1.00000 osd.1
-                5 ssd 1.00000 osd.5
-                6 ssd 1.00000 osd.6
-        -16 3.00000 rack rack2
-        -17 3.00000 host hostd
-                0 hdd 1.00000 osd.0
-                3 hdd 1.00000 osd.3
-                4 hdd 1.00000 osd.4
-        -18 3.00000 rack rack3
-        -19 3.00000 host hoste
-                2 hdd 1.00000 osd.2
-                7 hdd 1.00000 osd.7
-                8 hdd 1.00000 osd.8
-    -1 0 root default
-    -3 0 host serverc
-    -5 0 host serverd
-    -7 0 host servere
+    [root@clienta /root]#  ceph osd crush tree
+    ID   CLASS  WEIGHT   TYPE NAME         
+    -16               0  root default-cl260
+    -17               0      rack rack1    
+    -20               0          host hostc
+    -18               0      rack rack2    
+    -21               0          host hostd
+    -19               0      rack rack3    
+    -22               0          host hoste
+    -1         0.08817  root default      
+    -9               0      host clienta  
+    -5         0.02939      host serverc  
+    0    hdd  0.00980          osd.0     
+    4    hdd  0.00980          osd.4     
+    7    ssd  0.00980          osd.7     
+    -7         0.02939      host serverd  
+    1    hdd  0.00980          osd.1     
+    5    hdd  0.00980          osd.5     
+    6    ssd  0.00980          osd.6     
+    -3         0.02939      host servere  
+    2    hdd  0.00980          osd.2     
+    3    hdd  0.00980          osd.3     
+    8    ssd  0.00980          osd.8 
 
+    ceph osd crush set osd.6 1.0 root=default-cl260 rack=rack1 host=hostc
+    ceph osd crush set osd.7 1.0 root=default-cl260 rack=rack1 host=hostc
+    ceph osd crush set osd.8 1.0 root=default-cl260 rack=rack1 host=hostc
+    ceph osd crush set osd.0 1.0 root=default-cl260 rack=rack2 host=hostd
+    ceph osd crush set osd.1 1.0 root=default-cl260 rack=rack2 host=hostd
+    ceph osd crush set osd.2 1.0 root=default-cl260 rack=rack2 host=hostd
+    ceph osd crush set osd.3 1.0 root=default-cl260 rack=rack3 host=hoste
+    ceph osd crush set osd.4 1.0 root=default-cl260 rack=rack3 host=hoste
+    ceph osd crush set osd.5 1.0 root=default-cl260 rack=rack3 host=hoste
 
-Create a crush rule by using file
+    [root@clienta ~]# ceph osd tree
+    ID   CLASS  WEIGHT   TYPE NAME           STATUS  REWEIGHT  PRI-AFF
+    -16         9.00000  root default-cl260                           
+    -17         3.00000      rack rack1                               
+    -20         3.00000          host hostc                           
+    6    ssd  1.00000              osd.6       up   1.00000  1.00000
+    7    ssd  1.00000              osd.7       up   1.00000  1.00000
+    8    ssd  1.00000              osd.8       up   1.00000  1.00000
+    -18         3.00000      rack rack2                               
+    -21         3.00000          host hostd                           
+    0    hdd  1.00000              osd.0       up   1.00000  1.00000
+    1    hdd  1.00000              osd.1       up   1.00000  1.00000
+    2    hdd  1.00000              osd.2       up   1.00000  1.00000
+    -19         3.00000      rack rack3                               
+    -22         3.00000          host hoste                           
+    3    hdd  1.00000              osd.3       up   1.00000  1.00000
+    4    hdd  1.00000              osd.4       up   1.00000  1.00000
+    5    hdd  1.00000              osd.5       up   1.00000  1.00000
+    -1               0  root default                                 
+    -9               0      host clienta                             
+    -5               0      host serverc                             
+    -7               0      host serverd                             
+    -3               0      host servere     
 
-    ceph osd getcrushmap -o ~/cm-org.bin
-    crushtool -d ~/cm-org.bin -o ~/cm-org.txt
-    cp ~/cm-org.txt ~/cm-new.txt
-    cat ~/cm-new.txt
+Create a crush rule by to take first replicate from rack1
+
+    ceph osd getcrushmap -o /root/crushmap-org.bin
+    crushtool -d /root/crushmap-org.bin -o /root/crushmap-org.txt
+    echo $?
+    0
+
+    cp /root/crushmap-org.txt /root/crushmap-new.txt
+    cat /root/crushmap-new.txt
     ...output omitted...
+    
     rule onssd {
     id 3
     type replicated
@@ -430,21 +445,26 @@ Create a crush rule by using file
     }
 
     rule ssd-first {
-    id 5
-    type replicated
-    min_size 1
-    max_size 10
-    step take rack1
-    step chooseleaf firstn 1 type host
-    step emit
-    step take default-cl260 class hdd
-    step chooseleaf firstn -1 type rack
-    step emit
+        id 5
+        type replicated
+        min_size 1
+        max_size 10
+        step take rack1
+        step chooseleaf firstn 1 type host
+        step emit
+        step take default-cl260 class hdd
+        step chooseleaf firstn -1 type rack
+        step emit
     }
 
-    crushtool -c ~/cm-new.txt -o ~/cm-new.bin
-    crushtool -i ~/cm-new.bin --test --show-mappings --rule=5 --num-rep 3
-    ceph osd setcrushmap -i ~/cm-new.bin
+Create a new crushmap rule and test 
+
+    crushtool -c /root/crushmap-new.txt -o /root/crushmap-new.bin
+    crushtool -i /root/crushmap-new.bin --test --show-mappings --rule=5 --num-rep 3 > /root/test_rule5_rep3.txt
+    more /root/test_rule5_rep3.txt
+    
+
+    ceph osd setcrushmap -i /root/crushmap-new.bin
     ceph osd crush rule ls
     ceph osd pool create testcrush 32 32 ssd-first
     ceph osd lspools
@@ -458,8 +478,9 @@ Create a crush rule by using file
     7.9 active+clean [5,0,7] 5 [5,0,7] 5
     7.e active+clean [1,2,4] 1 [1,2,4] 1
 
-Remap 1 HDD OSD (id=3) of pg 7.8 to other HDD OSD (id=0)
-7.8 active+clean [5,3,7] 5 [5,3,7] ->  7.8 (7.8) -> up [5,0,7] acting [5,0,7]
+Remap 1 HDD OSD (id=3) of pg 7.8 to other HDD OSD (id=0): 
+from state:  7.8 active+clean [5,3,7] 5 [5,3,7] ->  7.8 (7.8) 
+  to state:                up [5,0,7] acting [5,0,7]
     
     ceph osd pg-upmap-items 7.8 3 0
     ceph pg map 7.8
@@ -475,31 +496,150 @@ Edit the crush structure
     ceph osd crush move rack2 datacenter=dc1
     ceph osd crush move rack3 datacenter=dc2
 
+    [root@clienta ~]# ceph osd tree
+    ID   CLASS  WEIGHT   TYPE NAME               STATUS  REWEIGHT  PRI-AFF
+    -39         6.00000  root review-cl260                                
+    -37         3.00000      datacenter dc1                               
+    -18         3.00000          rack rack2                               
+    -21         3.00000              host hostd                           
+    0    hdd  1.00000                  osd.0       up   1.00000  1.00000
+    1    hdd  1.00000                  osd.1       up   1.00000  1.00000
+    2    hdd  1.00000                  osd.2       up   1.00000  1.00000
+    -38         3.00000      datacenter dc2                               
+    -19         3.00000          rack rack3                               
+    -22         3.00000              host hoste                           
+    3    hdd  1.00000                  osd.3       up   1.00000  1.00000
+    4    hdd  1.00000                  osd.4       up   1.00000  1.00000
+    5    hdd  1.00000                  osd.5       up   1.00000  1.00000
+    -16         3.00000  root default-cl260                               
+    -17         3.00000      rack rack1                                   
+    -20         3.00000          host hostc                               
+    6    ssd  1.00000              osd.6           up   1.00000  1.00000
+    7    ssd  1.00000              osd.7           up   1.00000  1.00000
+    8    ssd  1.00000              osd.8           up   1.00000  1.00000
+    -1               0  root default                                     
+    -9               0      host clienta                                 
+    -5               0      host serverc                                 
+    -7               0      host serverd                                 
+    -3               0      host servere   
+
 Create a replicated pool and verify object replicas in different Datacenter
+ceph osd crush rule create-replicated <name> <root> <type> [<class>]
+    
+    ceph osd crush rule create-replicated replicated-rule1 default-cl260 datacenter
+    ceph osd crush rule create-replicated replicated-rule2 review-cl260 datacenter
+    ceph osd crush rule dump | grep -B2 -A 20 replicated-rule1
+    ceph osd crush rule dump | grep -B2 -A 20 replicated-rule2
+    ceph osd getcrushmap -o /root/crushmap-review.bin
+    crushtool -i /root/crushmap-review.bin --test --show-mappings --rule=2 --num-rep 2 | more
+    
+    ceph osd pool create review-pool1 64 64 replicated replicated-rule1
+    ceph osd pool create review-pool2 64 64 replicated replicated-rule2
+    [root@clienta ~]# ceph osd pool ls detail | grep review-pool
+    pool 11 'review-pool1' replicated size 3 min_size 2 crush_rule 2 object_hash rjenkins pg_num 64 pgp_num 64 autoscale_mode on last_change 544 flags hashpspool,creating stripe_width 0
+    pool 12 'review-pool2' replicated size 3 min_size 2 crush_rule 3 object_hash rjenkins pg_num 64 pgp_num 64 autoscale_mode on last_change 547 flags hashpspool stripe_width 0
+    
+    ceph pg dump pgs_brief | grep ^11
+    ceph pg dump pgs_brief | grep ^12
 
-    ceph osd crush rule create-replicated replicated1 default-cl260 datacenter
-    ceph osd crush rule dump | grep -B2 -A 20 replicated1
-    ceph osd pool create reviewpool 64 64 replicated replicated1
-    ceph osd pool ls detail | grep reviewpool
-    pool 8 'reviewpool' replicated size 3 min_size 2 crush_rule 1 object_hash rjenkins
     ceph osd crush tunables optimal
-    ceph pg dump pgs_brief | grep ^8
+## Section 2 - manage OSD map
 
-## Section 2 - manage osd map
+
+
+Get epoch time, set-full-ratio, set-nearfull-ratio
 
     ceph osd dump
     ceph osd set-full-ratio 0.9
     ceph osd set-nearfull-ratio 0.9
-    ceph osd getmap -o map.bin
-    osdmaptool --print map.bin
- 
-    osdmaptool --export-crush crush.bin map.bin
-    crushtool -d crush.bin -o crush.txt 
-    crushtool -c crush.txt -o crushnew.bin
-    cp map.bin mapnew.bin
-    osdmaptool --import-crush crushnew.bin mapnew.bin
-    osdmaptool --test-map-pgs-dump mapnew.bin
+    ceph osd dump
 
+
+Export and import maps, verify epoch changed
+
+    ceph osd getmap -o osdmap.bin
+    osdmaptool --print osdmap.bin
+    osdmaptool --export-crush crushmap.bin osdmap.bin
+    crushtool -d crushmap.bin -o crushmap.txt 
+ 
+    crushtool -c crushmap.txt -o crushmap-new.bin
+    cp osdmap.bin osdmap-new.bin
+    osdmaptool --import-crush crushmap-new.bin osdmap-new.bin
+    
+    osdmaptool --test-map-pgs-dump osdmap-new.bin
+
+### Revert everything
+Delete pool
+
+Delete rule
+    ceph osd crush rule rm onssd
+    ceph osd crush rule rm replicated-rule1
+    ceph osd crush rule rm replicated-rule2
+    ceph osd crush rule rm ssd-first
+
+
+    [root@clienta /root]# ceph osd tree
+    ID  CLASS  WEIGHT   TYPE NAME         STATUS  REWEIGHT  PRI-AFF
+    -1         0.08817  root default                               
+    -9               0      host clienta                           
+    -5         0.02939      host serverc                           
+    0    hdd  0.00980          osd.0         up   1.00000  1.00000
+    4    hdd  0.00980          osd.4         up   1.00000  1.00000
+    7    ssd  0.00980          osd.7         up   1.00000  1.00000
+    -7         0.02939      host serverd                           
+    1    hdd  0.00980          osd.1         up   1.00000  1.00000
+    5    hdd  0.00980          osd.5         up   1.00000  1.00000
+    6    ssd  0.00980          osd.6         up   1.00000  1.00000
+    -3         0.02939      host servere                           
+    2    hdd  0.00980          osd.2         up   1.00000  1.00000
+    3    hdd  0.00980          osd.3         up   1.00000  1.00000
+    8    ssd  0.00980          osd.8         up   1.00000  1.00000
+
+    ceph osd crush set osd.0 1.0 root=default host=serverc
+    ceph osd crush set osd.4 1.0 root=default host=serverc
+    ceph osd crush set osd.7 1.0 root=default host=serverc
+    ceph osd crush set osd.1 1.0 root=default host=serverd
+    ceph osd crush set osd.5 1.0 root=default host=serverd
+    ceph osd crush set osd.6 1.0 root=default host=serverd
+    ceph osd crush set osd.2 1.0 root=default host=servere
+    ceph osd crush set osd.3 1.0 root=default host=servere
+    ceph osd crush set osd.8 1.0 root=default host=servere
+
+    for id in 6 7 8
+    do
+    ceph osd crush rm-device-class osd.$id
+    ceph osd crush set-device-class hdd osd.$id
+    done
+
+    ceph osd crush remove hostc
+    ceph osd crush remove hostd
+    ceph osd crush remove hoste
+    ceph osd crush remove rack1
+    ceph osd crush remove rack2
+    ceph osd crush remove rack3
+    ceph osd crush remove dc1
+    ceph osd crush remove dc2
+    ceph osd crush remove review-cl260
+    ceph osd crush remove default-cl260 
+    
+    [root@clienta ~]# ceph osd tree
+    ID   CLASS  WEIGHT   TYPE NAME           STATUS  REWEIGHT  PRI-AFF
+    -39               0  root review-cl260                            
+    -16               0  root default-cl260                           
+    -1         9.00000  root default                                 
+    -9               0      host clienta                             
+    -5         3.00000      host serverc                             
+    0    hdd  1.00000          osd.0           up   1.00000  1.00000
+    4    hdd  1.00000          osd.4           up   1.00000  1.00000
+    7    hdd  1.00000          osd.7           up   1.00000  1.00000
+    -7         3.00000      host serverd                             
+    1    hdd  1.00000          osd.1           up   1.00000  1.00000
+    5    hdd  1.00000          osd.5           up   1.00000  1.00000
+    6    hdd  1.00000          osd.6           up   1.00000  1.00000
+    -3         3.00000      host servere                             
+    2    hdd  1.00000          osd.2           up   1.00000  1.00000
+    3    hdd  1.00000          osd.3           up   1.00000  1.00000
+    8    hdd  1.00000          osd.8           up   1.00000  1.00000
 # Part 6 - block storage - basic
 
 ## Section 1 - rbd
@@ -513,26 +653,24 @@ On clienta
     ceph auth get-or-create client.test_pool.clientb mon 'profile rbd' osd 'profile rbd' -o /etc/ceph/ceph.client.test_pool.clientb.keyring
     cat /etc/ceph/ceph.client.test_pool.clientb.keyring
     ceph auth get client.test_pool.clientb
+    scp /etc/ceph/{ceph.conf,ceph.client.test_pool.clientb.keyring} root@clientb:/etc/ceph
 
 On clientb
 
     yum install -y ceph-common
-    [ceph: root@clienta /]# scp /etc/ceph/{ceph.conf,ceph.client.test_pool.clientb.keyring} root@clientb:/etc/ceph
     export CEPH_ARGS='--id=test_pool.clientb'
     rbd ls test_pool
-
- ### Mount online a rbd volume
 
     rbd create test_pool/test --size=128M
     rbd ls test_pool
     rbd info test_pool/test
-    [root@clientb ~]# rbd map test_pool/test
+    rbd map test_pool/test
     /dev/rbd0
     rbd showmapped
     mkfs.xfs /dev/rbd0
     mkdir /mnt/rbd
     mount /dev/rbd0 /mnt/rbd
-    chown admin:admin /mnt/rbd
+    chown root:root /mnt/rbd
     df /mnt/rbd
     dd if=/dev/zero of=/mnt/rbd/test1 bs=10M count=1
     ls /mnt/rbd
@@ -544,32 +682,37 @@ On clientb
 
 ### Mount on a /etc/fstab
 
-    [root@clientb ~]# cat /etc/ceph/rbdmap
+    echo "test_pool/test                  id=test_pool.clientb,keyring=/etc/ceph/ceph.client.test_pool.clientb.keyring" >> /etc/ceph/rbdmap 
+    cat /etc/ceph/rbdmap
     # RbdDevice                     Parameters
     #poolname/imagename             id=client,keyring=/etc/ceph/ceph.client.keyring
     test_pool/test                  id=test_pool.clientb,keyring=/etc/ceph/ceph.client.test_pool.clientb.keyring
 
+    echo "/dev/rbd/test_pool/test /mnt/rbd xfs noauto 0 0" >> /etc/fstab
     cat /etc/fstab
     /dev/rbd/test_pool/test /mnt/rbd xfs noauto 0 0
     
     rbdmap map
     rbd showmapped
-    rbdmap unmap
+    rbdmap unmap /dev/rbd0
     rbd showmapped
     systemctl enable rbdmap
     reboot
     df /mnt/rbd
-    ceph df
+    
+Clear lab
 
     rbdmap unmap
     df | grep rbd
     rbd showmapped
-    cat /etc/fstab
+    vi /etc/fstab
     # /dev/rbd/test_pool/test /mnt/rbd xfs noauto 0 0
-    cat /etc/ceph/rbdmap
+    vi /etc/ceph/rbdmap
     # test_pool/test                  id=test_pool.clientb,keyring=/etc/ceph/ceph.client.test_pool.clientb.keyring
+    
     rbd rm test_pool/test --id test_pool.clientb
     rados -p test_pool ls --id test_pool.clientb
+    ceph osd pool rm test_pool test_pool --yes-i-really-really-mean-it
 
 ## Section 2 - snapshot
 
@@ -577,14 +720,27 @@ On clientb
 
 On node clienta
 
-    [root@clienta ~]# rbd map --pool rbd image1
+    ceph osd pool create rbd 32 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+
+    rbd ls rbd
+    rbd create rbd/image1 --size=128M
+
+    rbd map rbd/image1
     /dev/rbd0
     mkfs.xfs /dev/rbd0
 
+    ceph auth get-or-create client.rbd.clientb mon 'profile rbd' osd 'profile rbd' -o /etc/ceph/ceph.client.rbd.clientb.keyring
+    scp /etc/ceph/ceph.client.rbd.clientb.keyring root@clientb:/etc/ceph
+
 Confirm that the /dev/rbd0 device is writable.
 
-    [root@clienta ~]# blockdev --getro /dev/rbd0
+    blockdev --getro /dev/rbd0
     0
+
+Create a snapshot, mount on clientb and confirm snapshot is readonly
+
     rbd snap create rbd/image1@firstsnap
     rbd disk-usage --pool rbd image1
     NAME PROVISIONED USED
@@ -596,18 +752,17 @@ On node clientb
 
     export CEPH_ARGS='--id=rbd.clientb'
     rbd map --pool rbd image1@firstsnap
-    [root@clientb ~]# rbd map --pool rbd image1@firstsnap
-    /dev/rbd0
     rbd showmapped
 
 Confirm that /dev/rbd0 is a read-only block device
 
-    [root@clientb ~]# blockdev --getro /dev/rbd0
+    blockdev --getro /dev/rbd0
     1
 
-On node clienta
-Write data
+Write data to image and verify there's no data in snapshot on clientb 
+On node clienta, 
 
+    mkdir /mnt/image
     mount /dev/rbd0 /mnt/image
     cp /etc/ceph/ceph.conf /mnt/image/file0
     df /mnt/image/
@@ -617,6 +772,7 @@ Write data
 On node clientb
 Check snapshot blockdevice
 
+    mkdir /mnt/snapshot/
     mount /dev/rbd0 /mnt/snapshot/
     df /mnt/snapshot/
     Filesystem 1K-blocks Used Available Use% Mounted on
@@ -638,6 +794,7 @@ On node clienta
 
 On node clientb
 
+    mkdir /mnt/clone
     rbd map --pool rbd clone1
     /dev/rbd0
     mount /dev/rbd0 /mnt/clone
@@ -663,13 +820,27 @@ On node clienta
 
 ## Section 3 - import/export 
 
-On node clienta ( cluster 1)
+If you are trying to create a cluster on a single node, you must change the default of the osd crush chooseleaf type setting from 1 (meaning host or node) to 0 (meaning osd) in your Ceph configuration file before you create your monitors and OSDs (https://docs.ceph.com/en/quincy/rados/troubleshooting/troubleshooting-pg/#one-node-cluster)
 
-    ceph osd pool create rbd 32
-    ceph osd pool application enable rbd rbd
-    rbd pool init -p rbd
+    ceph config get mon.* osd_crush_chooseleaf_type
+    1
+    ceph config set mon.* osd_crush_chooseleaf_type 0
 
-On node serverf ( cluster 2)
+    ceph osd getcrushmap -o comp_crush_map.cm
+    crushtool -d comp_crush_map.cm -o crush_map.txt
+    rule replicated_rule {
+        id 0
+        type replicated
+        min_size 1
+        max_size 10
+        step take default
+        step chooseleaf firstn 0 type osd <<<<
+        step emit
+    }
+    crushtool -c crush_map.txt -o new_crush_map.cm
+    ceph osd setcrushmap -i new_crush_map.cm  
+
+On node serverf ( cluster serverf )
 
     ceph osd pool create rbd 32
     ceph osd pool application enable rbd rbd
@@ -680,14 +851,16 @@ On node serverf ( cluster 2)
 
 On node clienta ( cluster 1)
 
+    rbd create rbd/test --size=128M
     rbd map --pool rbd test
     mkfs.xfs /dev/rbd0
+    mkdir /mnt/rbd
     mount /dev/rbd0 /mnt/rbd
     cp /etc/ceph/ceph.conf /mnt/rbd/file0
     umount /mnt/rbd
 
     rbd export rbd/test /mnt/export.dat
-    rsync -avP /home/admin/rbd-export/export.dat serverf:/home/admin/rbd-import
+    rsync -avP /mnt/export.dat serverf:/mnt/export.dat
 
 On node serverf ( cluster 2)  
  
@@ -696,6 +869,7 @@ On node serverf ( cluster 2)
     rbd du --pool rbd test
 
     rbd map --pool rbd test
+    mkdir /mnt/rbd
     mount /dev/rbd0 /mnt/rbd
     df -h /mnt/rbd
     cat /mnt/rbd/file0
@@ -714,6 +888,7 @@ On node serverf ( cluster 2)
 
 On node clienta ( cluster 1)
 
+    rbd map --pool rbd test
     mount /dev/rbd0 /mnt/rbd
     dd if=/dev/zero of=/mnt/rbd/file1 bs=1M count=5
     rbd du --pool rbd test
@@ -736,9 +911,8 @@ On node clienta ( cluster 1)
     test 128 MiB 12 MiB
     <TOTAL> 128 MiB 88 MiB
     
-    cephadm shell --mount /home/admin/rbd-export/
     rbd export-diff --from-snap firstsnap rbd/test@secondsnap /mnt/export-diff.dat
-    rsync -avP /home/admin/rbd-export/export-diff.dat serverf:/home/admin/rbd-import
+    rsync -avP /mnt/export-diff.dat serverf:/mnt/export-diff.dat
 
 On node serverf ( cluster 2)
 
@@ -748,7 +922,7 @@ On node serverf ( cluster 2)
     test 128 MiB 32 MiB
     <TOTAL> 128 MiB 64 MiB
     
-    rbd import-diff /mnt/rbd-import/export-diff.dat rbd/test
+    rbd import-diff /mnt/export-diff.dat rbd/test
     
     rbd du --pool rbd test
     NAME PROVISIONED USED
@@ -769,12 +943,14 @@ Cleanup
 
 On node clienta ( cluster 1)
 
+    umount /mnt/rbd
     rbd unmap /dev/rbd0
     rbd --pool rbd snap purge test
     rbd rm test --pool rbd
 
 On node serverf ( cluster 2)
 
+    umount /mnt/rbd
     rbd unmap /dev/rbd0
     rbd --pool rbd snap purge test
     rbd rm test --pool rbd
@@ -786,16 +962,9 @@ On node serverf ( cluster 2)
 Create prepare mirror 
 On node clienta 
     
-    ceph osd pool create rbd 32 32
-    ceph osd pool application enable rbd rbd
-    rbd pool init -p rbd
     ceph orch apply rbd-mirror --placement=serverc
 
 On node serverf
-
-    ceph osd pool create rbd 32 32
-    ceph osd pool application enable rbd rbd
-    rbd pool init -p rbd
     
 
 Create pool and mirror pool
@@ -1139,7 +1308,7 @@ On clienta as cephfs client - admin user
 
     yum install ceph-common
     mkdir /mnt/mycephfs
-    [root@clienta ~]# ls -l /etc/ceph
+    [root@clienta /root]# ls -l /etc/ceph
     -rw-r--r--. 1 root root 63 Sep 17 21:42 ceph.client.admin.keyring
     mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=admin
     
@@ -1351,8 +1520,8 @@ On node serverd
 Add MON daemon on node serverg
 
     ceph orch ls --service_type=mon
-    ceph cephadm get-pub-key > ~/ceph.pub
-    ssh-copy-id -f -i ~/ceph.pub root@serverg
+    ceph cephadm get-pub-key > /root/ceph.pub
+    ssh-copy-id -f -i /root/ceph.pub root@serverg
 
 Add HOST serverg
 
