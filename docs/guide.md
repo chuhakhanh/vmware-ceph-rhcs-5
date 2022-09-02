@@ -56,6 +56,7 @@ run preflight
     podman login repo-2.lab.example.com --username quayadmin --password password
 
 bootstrap on a single mon 
+https://docs.ceph.com/en/quincy/cephadm/install/#running-the-bootstrap-command
 
     cephadm --image repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-rhel8 bootstrap --mon-ip=<serverf IP> \
     --initial-dashboard-password=redhat \
@@ -65,6 +66,7 @@ bootstrap on a single mon
     --registry-username=quayadmin \
     --registry-password=password  \
     --yes-i-know
+    --single-host-defaults
 
 ### Post installation
 
@@ -962,10 +964,13 @@ On node serverf ( cluster 2)
 Create prepare mirror 
 On node clienta 
     
-    ceph orch apply rbd-mirror --placement=serverc
+    ceph orch apply rbd-mirror --placement=serverc.lab.example.com
+    ceph orch ls
 
 On node serverf
     
+    ceph orch apply rbd-mirror --placement=serverf.lab.example.com
+    ceph orch ls
 
 Create pool and mirror pool
 
@@ -986,8 +991,6 @@ On node clienta
 On node serverf
 
     cephadm shell --mount /root/bootstrap_token_prod
-    ceph orch apply rbd-mirror --placement=serverf
-    ceph orch ls
     rbd mirror pool peer bootstrap import --site-name secondary --direction rx-only rbd /mnt/bootstrap_token_prod
     rbd -p rbd ls
 
