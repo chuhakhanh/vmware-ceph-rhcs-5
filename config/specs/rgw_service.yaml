@@ -1,0 +1,10 @@
+service_type: rgw
+service_id: myrealm.myzone
+service_name: rgw.myrealm.myzone
+placement:
+  count: 4
+  hosts:
+  - serverd.lab.example.com
+  - servere.lab.example.com
+spec:
+  rgw_frontend_port: 8080

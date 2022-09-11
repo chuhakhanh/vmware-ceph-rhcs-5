@@ -944,11 +944,16 @@ On node serverf ( cluster 2)
 Cleanup
 
 On node clienta ( cluster 1)
+    rbd --pool rbd ls
 
     umount /mnt/rbd
     rbd unmap /dev/rbd0
     rbd --pool rbd snap purge test
     rbd rm test --pool rbd
+
+    rbd --pool rbd snap unprotect rbd/image1@firstsnap
+    rbd --pool rbd snap purge rbd/image1
+    rbd --pool rbd rm image1
 
 On node serverf ( cluster 2)
 
@@ -967,30 +972,62 @@ On node clienta
     ceph orch apply rbd-mirror --placement=serverc.lab.example.com
     ceph orch ls
 
+    ceph daemon rbd mirror config set debug_osd 0/5
+
 On node serverf
     
     ceph orch apply rbd-mirror --placement=serverf.lab.example.com
     ceph orch ls
 
-Create pool and mirror pool
+Create pool and mirror using pool mode
 
-On node clienta 
-
+On node clienta, create rbd pool if neccessary 
+    ceph osd pool create rbd 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
+    
     rbd create image1 --size 1024 --pool rbd --image-feature=exclusive-lock,journaling
     rbd -p rbd ls
     rbd --image image1 info
 
+    ceph tell type.id config set debug_subsystem debug-level
+    ceph config set osd.0 debug_rbd_mirror 5/5
+    ceph config set global debug_rbd_mirror 5/5
+    ceph tell mon.0 config show | grep rbd| grep debug
+    "debug_rbd": "0/5",
+    "debug_rbd_mirror": "5/5",
+    
+    ceph tell mon.* config set debug_rbd_mirror 5/5
+
     rbd mirror pool enable rbd pool
     rbd --image image1 info
+        rbd image 'image1':
+        size 1 GiB in 256 objects
+        order 22 (4 MiB objects)
+        snapshot_count: 0
+        id: dd7d3dad282f
+        block_name_prefix: rbd_data.dd7d3dad282f
+        format: 2
+        features: exclusive-lock, journaling
+        op_features: 
+        flags: 
+        create_timestamp: Fri Sep  2 12:45:51 2022
+        access_timestamp: Fri Sep  2 12:45:51 2022
+        modify_timestamp: Fri Sep  2 12:45:51 2022
+        journal: dd7d3dad282f
+        mirroring state: enabled
+        mirroring mode: journal
+        mirroring global id: 7137f2c2-5534-43a2-b664-3ea6379bacb0
+        mirroring primary: true
     
-    mkdir /root/mirror
-    cephadm shell --mount /root/mirror/
+    rbd mirror pool status
     rbd mirror pool peer bootstrap create --site-name primary rbd > /mnt/bootstrap_token_prod
-    rsync -avP /root/mirror/bootstrap_token_prod serverf:/root/bootstrap_token_prod
+    rsync -avP /mnt/bootstrap_token_prod serverf:/mnt/bootstrap_token_prod
+    scp  /mnt/bootstrap_token_prod serverf:/mnt/bootstrap_token_prod
 
 On node serverf
 
-    cephadm shell --mount /root/bootstrap_token_prod
+    cephadm shell --mount /mnt/bootstrap_token_prod
     rbd mirror pool peer bootstrap import --site-name secondary --direction rx-only rbd /mnt/bootstrap_token_prod
     rbd -p rbd ls
 
@@ -998,15 +1035,15 @@ Verify mirror status
 
 On node clienta, serverf
     
-    rbd mirror image status rbd/myimage
+    rbd mirror image status rbd/image1
     rbd mirror pool info rbd
     rbd mirror pool status
 
 Test 1: switch the image between cluster
 
 On node clienta
-    rbd mirror image demote rbd/myimage
-    rbd mirror image status rbd/myimage
+    rbd mirror image demote rbd/image1
+    rbd mirror image status rbd/image1
 
 On node serverf
     rbd mirror image promote rbd/myimage
@@ -1037,56 +1074,69 @@ On node serverf
 ## Section 2 - iscsi
 
 On node clienta 
-
+As warning message come with iscsi configured as https://bugzilla.redhat.com/show_bug.cgi?id=2018906
+A workaround is to silence CEPHADM_STRAY_DAEMON
+    
+    ceph config get osd osd_heartbeat_interval
+    ceph config get osd osd_heartbeat_grace 
+    ceph config get osd osd_client_watch_timeout
+    ceph config get mgr mgr/cephadm/warn_on_stray_daemons 
+    
     ceph config set osd osd_heartbeat_interval 5
     ceph config set osd osd_heartbeat_grace 20
     ceph config set osd osd_client_watch_timeout 15
+    ceph config set mgr mgr/cephadm/warn_on_stray_daemons false
+
+    ceph osd pool create iscsipool1 32
+    ceph osd pool application enable iscsipool1 rbd
+    rbd pool init -p iscsipool1
 
     vi /etc/ceph/iscsi-gateway.yaml
-    service_type: iscsi
-    service_id: iscsi
-    placement:
-        hosts:
-        - serverc
-        - servere
-    spec:
-        pool: iscsipool1
-        trusted_ip_list: "<ip serverc>,<ip servere>"
-        api_port: 5000
-        api_secure: false
-        api_user: admin
-        api_password: redhat
-    
     ceph orch apply -i /etc/ceph/iscsi-gateway.yaml
     ceph dashboard iscsi-gateway-list
 
-Create a target on GUI
-Configure an iSCSI Initiator
+    rbd create image1 --size 128 --pool iscsipool1 
 
+ Create a target on GUI
+
+    Block>iSCSI>Targets>Create
+    a. Modify the Target IQN (optional).
+    b. Click +Add portal and select the first of at least two gateways: 10.1.17.113
+    c. Click +Add image and select an image for the target to export: iscsipool.image1
+    d. Click Create Target:     
+    User: cl260-admin
+    Password: redhat-password
+   
+Configure an iSCSI Initiator
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/configuring_device_mapper_multipath/index
     yum install iscsi-initiator-utils device-mapper-multipath
     mpathconf --enable --with_multipathd y
     vi /etc/multipath.conf
-    devices {
+    
+devices {
         device {
-        vendor "LIO-ORG"
-        hardware _handler "1 alua"
-        path_grouping_policy "failover"
-        path_selector "queue-length 0"
-        failback 60
-        path_checker tur
-        prio alua
-        prio_args exclusive_pref_bit
-        fast_io_fail_tmo 25
-        no_path_retry queue
+                vendor                 "LIO-ORG"
+                product                "TCMU device"
+                hardware_handler       "1 alua"
+                path_grouping_policy   "failover"
+                path_selector          "queue-length 0"
+                failback               60
+                path_checker           tur
+                prio                   alua
+                prio_args              exclusive_pref_bit
+                fast_io_fail_tmo       25
+                no_path_retry          queue
         }
-    }
+}
+
     systemctl reload multipathd
     vi /etc/iscsi/iscsid.conf
     node.session.auth.authmethod = CHAP
-    node.session.auth.username = user
-    node.session.auth.password = password
-    iscsiadm -m discovery -t st -p 10.30.0.210
-    iscsiadm -m node -T iqn.2001-07.com.ceph:1634089632951 -l
+    node.session.auth.username = admin
+    node.session.auth.password = redhat
+    iscsiadm -m discovery -t st -p 10.1.17.113
+    10.1.17.113:3260,1 iqn.2001-07.com.ceph:1662815569595
+    iscsiadm -m node -T iqn.2001-07.com.ceph:1662815569595 -l
     lsblk
     multipath -ll
 
@@ -1094,26 +1144,18 @@ Configure an iSCSI Initiator
 
 ## Section 1 - deploy rgw
 
-Create prepare rgw 
+Clear and create prepare rgw 
     
     ceph orch ls
     ceph orch ls --service-type rgw
+    NAME            PORTS  RUNNING  REFRESHED  AGE  PLACEMENT                                        
+    rgw.realm.zone  ?:80       2/2  2m ago     10d  serverc.lab.example.com;serverd.lab.example.com  
+    ceph orch rm rgw.realm.zone
 
 Configure rgw service myrealm.myzone to start 2 RGW instances in serverd and servere, port 8080    
     
     vi /tmp/rgw_service.yaml
-    service_type: rgw
-    service_id: myrealm.myzone
-    service_name: rgw.myrealm.myzone
-    placement:
-    count: 4
-        hosts:
-        - serverd.lab.example.com
-        - servere.lab.example.com
-    spec:
-        rgw_frontend_port: 8080
-
-    ceph orch apply -i rgw_service.yaml    
+    ceph orch apply -i /tmp/rgw_service.yaml    
     ceph orch ps --daemon-type rgw
     NAME HOST STATUS
     REFRESHED AGE PORTS ...
@@ -1129,6 +1171,10 @@ Configure rgw service myrealm.myzone to start 2 RGW instances in serverd and ser
 On node serverd, servere
 
     podman ps -a --format "{{.ID}} {{.Names}}" | grep rgw
+    ss -tupln | grep 80
+
+On clienta
+
     curl http://serverd:8080
     curl http://serverd:8081
 
@@ -1147,11 +1193,11 @@ Realm: cl260
 
 Zonegroup: classroom
 
-    radosgw-admin zonegroup create --rgw-zonegroup=classroom --endpoints=http://serverc:80 --master --default
+    radosgw-admin zonegroup create --rgw-zonegroup=classroom --endpoints=http://serverc.lab.example.com:80 --master --default
 
 Zone: us-east-1
 
-    radosgw-admin zone create --rgw-zonegroup=classroom --rgw-zone=us-east-1 --endpoints=http://serverc:80 --master --default --access-key=replication --secret=secret
+    radosgw-admin zone create --rgw-zonegroup=classroom --rgw-zone=us-east-1 --endpoints=http://serverc.lab.example.com:80 --master --default --access-key=replication --secret=secret
 
 User: repl.user
 
@@ -1163,7 +1209,7 @@ Commit:
 
 Service: cl260-1
 
-    ceph orch apply rgw cl260-1 --realm=cl260 --zone=us-east-1 --placement="1 serverc"
+    ceph orch apply rgw cl260-1 --realm=cl260 --zone=us-east-1 --placement="1 serverc.lab.example.com"
     ceph orch ps --daemon-type rgw
     NAME HOST STATUS REFRESHED AGE PORTS ...
     rgw.cl260-1.serverc.sxsntj serverc.lab.example.com running (6m) 6m ago 6m
@@ -1171,15 +1217,25 @@ Service: cl260-1
 
 Update zone name:
 
+    ceph config get client.rgw rgw_zone
     ceph config set client.rgw rgw_zone us-east-1
 
  View:
 
-    radosgw-admin realm pull --url=http://serverc:80 --access-key=replication --secret-key=secret
+    radosgw-admin realm pull --url=http://serverc.lab.example.com:80 --access-key=replication --secret-key=secret
     radosgw-admin period get-current
     {
     "current_period": "7cdc83cf-69d8-478e-b625-d5250ac4435b"
     }
+
+### Dashboard
+    
+    radosgw-admin sync status
+    echo {'myzone.node.tdncax': 'replication'} > access_key
+    echo {'myzone.node.tdncax': 'secret'} > secret_key
+
+    ceph dashboard set-rgw-api-access-key -i access_key
+    ceph dashboard set-rgw-api-secret-key -i secret_key
 ### zonegroup: classroom, zone: us-east-2
 
 Realm: cl260

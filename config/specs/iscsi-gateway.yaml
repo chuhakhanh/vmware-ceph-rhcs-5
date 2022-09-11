@@ -1,0 +1,13 @@
+service_type: iscsi
+service_id: iscsi
+placement:
+  hosts:
+  - serverc.lab.example.com
+  - servere.lab.example.com
+spec:
+  pool: iscsipool1
+  trusted_ip_list: "10.1.17.113,10.1.17.115"
+  api_port: 5000
+  api_secure: false
+  api_user: admin
+  api_password: redhat
