@@ -1228,19 +1228,47 @@ Update zone name:
     "current_period": "7cdc83cf-69d8-478e-b625-d5250ac4435b"
     }
 
-### Dashboard
-    
-    radosgw-admin sync status
-    echo {'myzone.node.tdncax': 'replication'} > access_key
-    echo {'myzone.node.tdncax': 'secret'} > secret_key
+https://bugzilla.redhat.com/show_bug.cgi?id=1894190#c5
+The decision of removing RGW multisite support form cephadm comes from Sage and Casey Bodley (RGW team).
+They decide to remove it from cephadm because a complex RGW multisite configuration requires a "sequential" process with interactive checks that is not possible to implement properly.
 
+Ceph ansible had also this functionality but it seems that only work well for simple use cases. We commented with consultants and it seems that the usual way to do the RGW multisite configuration is manual using rados admin commands.
+### Dashboard
+    echo "password" > pass.txt
+    ceph dashboard ac-user-create serverworld -i pass.txt administrator
+
+    radosgw-admin sync status
+    radosgw-admin zone list
+    radosgw-admin zonegroup list
+
+    radosgw-admin user info --uid="repl.user"
+    ceph dashboard set-rgw-credentials
+    
+create file: 
+
+    access_key    
+    {"us-east-1.serverc.lab.example.com": "replication"} 
+
+create file: 
+    
+    secret_key
+    {"us-east-1.serverc.lab.example.com": "secret"} 
+    
     ceph dashboard set-rgw-api-access-key -i access_key
     ceph dashboard set-rgw-api-secret-key -i secret_key
+    ceph dashboard set-rgw-api-ssl-verify false
 ### zonegroup: classroom, zone: us-east-2
+On serverf
 
 Realm: cl260
     
+    radosgw-admin realm pull --url=http://serverc.lab.example.com:80 --access-key=replication --secret-key=secret
+    radosgw-admin period pull --url=http://serverc.lab.example.com:80 --access-key=replication --secret-key=secret
+    radosgw-admin period get-current
+
+    radosgw-admin realm list
     radosgw-admin realm default --rgw-realm=cl260
+
 
 Zonegroup: classroom
 
@@ -1297,21 +1325,28 @@ Service: cl260-2
 
 ## Section 1 - Amazon S3
 
-On node clienta
-
-    sudo cephadm shell -- radosgw-admin user create --uid="operator" --display-name="S3 Operator" --email="operator@example.com" --access_key="12345" --secret="67890"
-
 On clienta as S3 client
 
+    sudo cephadm shell -- radosgw-admin user create --uid="operator" --display-name="S3 Operator" --email="operator@example.com" --access_key="12345" --secret="67890"
+    radosgw-admin user list
+
+    dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+    yum install awscli -y
+    
     aws configure --profile=ceph
-    aws --profile=ceph --endpoint=http://serverc:80 s3 mb s3://testbucket
-    aws --profile=ceph --endpoint=http://serverc:80 s3 ls
+    AWS Access Key ID [None]: 12345
+    AWS Secret Access Key [None]: 67890
+    Default region name [None]: Enter
+    Default output format [None]: Enter
+
+    aws --profile=ceph --endpoint=http://serverc.lab.example.com:80 s3 mb s3://testbucket
+    aws --profile=ceph --endpoint=http://serverc.lab.example.com:80 s3 ls
     dd if=/dev/zero of=/tmp/10MB.bin bs=1024K count=10
-    aws --profile=ceph --endpoint=http://serverc:80 --acl=public-read-write s3 cp /tmp/10MB.bin s3://testbucket/10MB.bin
+    aws --profile=ceph --endpoint=http://serverc.lab.example.com:80 --acl=public-read-write s3 cp /tmp/10MB.bin s3://testbucket/10MB.bin
     
 On clienta as ceph admin    
 
-    wget -O /dev/null http://serverc:80/testbucket/10MB.bin
+    wget -O /dev/null http://serverc.lab.example.com:80/testbucket/10MB.bin
     cephadm shell -- radosgw-admin bucket list
     cephadm shell -- radosgw-admin metadata get bucket:testbucket
 
@@ -1324,26 +1359,27 @@ On node clienta
 On clienta as Swift client   
 
     sudo pip3 install --upgrade python-swiftclient
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift list
+
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift stat
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift list
     testbucket
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift post testcontainer
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift list
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift post testcontainer
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift list
     testbucket
     testcontainer
     dd if=/dev/zero of=/tmp/swift.dat bs=1024K count=10
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift upload testcontainer /tmp/swift.dat
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift upload testcontainer /tmp/swift.dat
     tmp/swift.dat
     
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat
-    swift -A http://serverc:80/auth/1.0 -U operator:swift -K opswift stat testcontainer
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift stat
+    swift -A http://serverc.lab.example.com:80/auth/1.0 -U operator:swift -K opswift stat testcontainer
 
 ## Section 3 - Access in multisite 
 
-On node serverf
+On node servera
 
-    swift -V 1.0 -A http://serverf:80/auth/v1 -U operator:swift -K opswift stat testcontainer    
-    swift -V 1.0 -A http://serverf:80/auth/v1 -U operator:swift -K opswift download testcontainer swift.dat
+    swift -V 1.0 -A http://serverf.lab.example.com:80/auth/v1 -U operator:swift -K opswift stat testcontainer    
+    swift -V 1.0 -A http://serverf.lab.example.com:80/auth/v1 -U operator:swift -K opswift download testcontainer tmp/swift.dat
 
 # Part 10 - cephfs (ceph file share)
 
@@ -1356,7 +1392,7 @@ On clienta as ceph admin
     ceph osd pool create mycephfs_data
     ceph osd pool create mycephfs_metadata
     ceph fs new mycephfs mycephfs_metadata mycephfs_data
-    ceph orch apply mds mycephfs --placement="1 serverc"
+    ceph orch apply mds mycephfs --placement="1 serverc.lab.example.com"
     ceph mds stat
     ceph status
     ceph df
@@ -1365,7 +1401,7 @@ On clienta as ceph admin
 
 On clienta as cephfs client - admin user
 
-    yum install ceph-common
+    yum install ceph-common -y
     mkdir /mnt/mycephfs
     [root@clienta /root]# ls -l /etc/ceph
     -rw-r--r--. 1 root root 63 Sep 17 21:42 ceph.client.admin.keyring
@@ -1389,7 +1425,7 @@ On clienta as cephfs admin
 
     cephadm shell --mount /etc/ceph
     ceph fs authorize mycephfs client.restricteduser / r /dir2 rw
-    ceph auth get client.restricteduser -o /mnt/ceph.client.restricteduser.keyring
+    ceph auth get client.restricteduser -o /etc/ceph/ceph.client.restricteduser.keyring
 
 On clienta as cephfs client - restricted user
     
@@ -1398,7 +1434,7 @@ On clienta as cephfs client - restricted user
     /mnt
     └── mycephfs
         ├── dir1
-        │ ├── a3rdfile
+        │ ├── atestfile
         │ └── ddtest
         └── dir2
     touch /mnt/mycephfs/dir1/restricteduser_file1
@@ -1424,19 +1460,20 @@ On clienta as cephfs client - restricted user
 
 Mount at boot
 
+    echo "serverc.lab.example.com:/ /mnt/mycephfuse fuse.ceph ceph.id=restricteduser,_netdev" >> /etc/fstab
     cat /etc/fstab
-    serverc.lab.example.com:/ /mnt/mycephfuse fuse.ceph ceph.id=restricteduser,_netdev
     mount -a
     df -h
     umount /mnt/mycephfuse
 
-## Section 2 - cephfs - manafing file
+## Section 2 - cephfs - managing file
 
 ### setfattr
 
 On clienta as cephfs admin - setfattr
 
-    mkdir /mnt/mycephfs/dir1
+    mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=admin
+    tree /mnt
     touch /mnt/mycephfs/dir1/ddtest
     getfattr -n ceph.dir.layout /mnt/mycephfs/dir1
     /mnt/mycephfs/dir1: ceph.dir.layout: No such attribute
@@ -1449,6 +1486,7 @@ On clienta as cephfs admin - setfattr
     stripe_count=1
 
     touch /mnt/mycephfs/dir1/anewfile
+    tree /mnt
     getfattr -n ceph.file.layout /mnt/mycephfs/dir1/anewfile
     stripe_count=2
 
@@ -1472,13 +1510,25 @@ On clienta as cephfs admin - setfattr
 On clienta as cephfs admin
 
     mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=restricteduser
+    ls -la /mnt/mycephfs/
     cd /mnt/mycephfs/.snap
     mkdir mysnapshot
+    mkdir: cannot create directory ‘mysnapshot’: Permission denied
+
+    ceph auth get client.restricteduser
+    caps mds = "allow r fsname=mycephfs, allow rw fsname=mycephfs path=/dir2"
+
+    ceph auth caps client.restricteduser mds 'allow rws fsname=mycephfs' mon 'allow r fsname=mycephfs' osd 'allow rw tag cephfs data=mycephfs'
+    cd /root
+    umount /mnt/mycephfs/
+    mount.ceph serverc.lab.example.com:/ /mnt/mycephfs -o name=restricteduser
+    
     tree /mnt/mycephfs
     /mnt/mycephfs
     └── dir1
         ├── a3rdfile
         ├── anewfile
+        ├── atestfile
         └── ddtest
 
     tree /mnt/mycephfs/.snap/mysnapshot
@@ -1486,13 +1536,23 @@ On clienta as cephfs admin
     └── dir1
         ├── a3rdfile
         ├── anewfile
+        ├── atestfile
         └── ddtest
+    rmdir mysnapshot
+    mkdir snapshot1
+    tree /mnt/mycephfs/.snap/snapshot1
+    
+    touch /mnt/mycephfs/dir1/a4thfile
+    touch /mnt/mycephfs/dir2/a5thfile
+    mkdir snapshot2
+    tree /mnt/mycephfs/.snap/snapshot1
+    tree /mnt/mycephfs/.snap/snapshot2
 
 On clienta as cephfs admin
 
     ceph mgr module enable snap_schedule
     ceph fs snap-schedule add / 1h
-    ceph fs snap-schedule status /
+    ceph fs snap-schedule status / | jq
 
 Wait for several time
 
@@ -1515,6 +1575,7 @@ OSD service
     sudo systemctl stop ceph-ff97a876-1fd2-11ec-8258-52540000fa0c@osd.2.service
     ceph osd stat
     journalctl -u ceph-ff97a876-1fd2-11ec-8258-52540000fa 0c@osd.2.service | grep systemd
+    sudo systemctl start ceph-ff97a876-1fd2-11ec-8258-52540000fa0c@osd.2.service
 
 OSD in out
 
@@ -1533,8 +1594,7 @@ PG stat
     ceph osd pool create testpool 32 32
     rados -p testpool put testobject /etc/ceph/ceph.conf
     ceph osd map testpool testobject
-    osdmap e332 pool 'testpool' (9) object 'testobject' -> pg 9.98824931 (9.11) -> up
-    ([8,2,5], p8) acting ([8,2,5], p8)
+    osdmap e332 pool 'testpool' (9) object 'testobject' -> pg 9.98824931 (9.11) -> up ([8,2,5], p8) acting ([8,2,5], p8)
     ceph pg 9.11 query
     ceph versions
     ceph tell osd.* version
@@ -1580,10 +1640,19 @@ Add MON daemon on node serverg
 
     ceph orch ls --service_type=mon
     ceph cephadm get-pub-key > /root/ceph.pub
-    ssh-copy-id -f -i /root/ceph.pub root@serverg
+    ssh-copy-id -f -i /root/ceph.pub root@serverg.lab.example.com
 
-Add HOST serverg
+On serverc run preflight    
 
+    yum install -y cephadm-ansible
+    cd /usr/share/cephadm-ansible
+    vi hostserverg
+    serverg.lab.example.com
+    ansible-playbook -i hostserverg cephadm-preflight.yml --extra-vars "ceph_origin="
+
+On clienta, add HOST serverg
+
+    ceph orch host ls
     ceph orch host add serverg.lab.example.com
 
 Add MON serverg    
@@ -1598,23 +1667,17 @@ Remove MON serverg
     ceph orch ls --service_type=mon
     ceph mon stat
 
-Remove OSD serverg
+Remove HOST serverg
 
     ceph orch ps serverg.lab.example.com
-    ceph osd stop 9 10 11
-    ceph osd out 9 10 11
-    ceph osd crush remove osd.9
-    ceph osd crush remove osd.10
-    ceph osd crush remove osd.11
-    ceph osd rm 9 10 11
-
-Remove HOST serverg
+    ceph orch host drain serverg.lab.example.com
     ceph orch host rm serverg.lab.example.com
     ceph orch host ls
 
 Maintenance HOST servere
-
-    ceph orch host maintenance enter servere.lab.example.com
+    
+    ceph orch host ok-to-stop serverg.lab.example.com
+    ceph orch host maintenance enter serverg.lab.example.com
     ceph orch host ls
     ssh admin@servere sudo reboot # reboot HOST servere
     ceph orch host maintenance exit servere.lab.example.com
@@ -1672,12 +1735,16 @@ Set the PG autoscale option to warn for the pool testpool. Verify that cluster h
     ceph osd pool set testpool pg_autoscale_mode on
     ceph osd pool autoscale-status
 
+    ceph tell mon.* config get mon_allow_pool_delete
+    ceph tell mon.* config set mon_allow_pool_delete true
+    ceph osd pool delete testpool testpool  --yes-i-really-really-mean-it
 ### OSD Affinity  
 
- Modify the primary affinity settings on an OSD so that it is more likely to be selected as primary for placement groups. Set the primary affinity for OSD 7 to 0
-
-    ceph osd primary-affinity 7 0
+ Modify the primary affinity settings on an OSD so that it is more likely to be selected as primary for placement groups. 
+ Set the primary affinity for OSD 7 to 0
+    
     ceph osd tree
+    ceph osd primary-affinity 7 0
     ceph osd dump | grep affinity
 
     ceph osd pool create benchpool 100 100
@@ -1709,15 +1776,19 @@ Set the PG autoscale option to warn for the pool testpool. Verify that cluster h
 On node serverd stop chroync and change date
 
     systemctl stop chronyd
-    timedatectl set-date 20092018
+    timedatectl set-time 02:58:30
 
 On clienta, troubleshooting the status
 
     systemctl status chronyd
     ceph health detail
+
+On serverd go to fix 
+
     sudo systemctl start chronyd
     systemctl status chronyd
     ceph health detail
+    timedatectl  status
 
 ### Fix OSD down issue
 
@@ -1773,6 +1844,9 @@ On node servere, troubleshooting the status
     sudo cat /var/log/ceph/2ae6d05a-229a-11ec-925e-52540000fa0c/myosd4.log
 
 On clienta, change cluster network of osd.4
+
+    ceph config get global cluster_network
+    ceph config set global cluster_network 10.10.0.0/24
 
     ceph config get osd.0 cluster_network
     172.25.249.0/24
