@@ -70,6 +70,11 @@ https://docs.ceph.com/en/quincy/cephadm/install/#running-the-bootstrap-command
 
 ### Post installation
 
+#### Install requirements tool
+
+    dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+    yum install nload -y
+
 #### Edit mgr config 
 
 Enable telemetry after bootstrap
@@ -157,13 +162,22 @@ On the clienta perform, config cluster configuration file
 ## Section 2 - mon
 ## Section 3 - network
 
+On node serverc, serverd ,servere
+
+    nload ens224
+
 On node clienta
 
     ceph config get osd public_network
     ceph config get mon public_network
+    ceph config get osd cluster_network
+    ceph config get mon cluster_network
 
-    ceph config set mon public_network 172.25.250.0/24
-    ceph config get mon public_network
+    ceph config set global cluster_network 192.168.126.0/24
+    ceph -s
+    ceph orch ls
+    ceph orch restart mon
+    ceph orch restart osd.default_drive_group
 
 # Part 4 - storage components
 
@@ -1246,12 +1260,14 @@ Ceph ansible had also this functionality but it seems that only work well for si
     
 create file: 
 
-    access_key    
+access_key    
+
     {"us-east-1.serverc.lab.example.com": "replication"} 
 
 create file: 
     
-    secret_key
+secret_key
+
     {"us-east-1.serverc.lab.example.com": "secret"} 
     
     ceph dashboard set-rgw-api-access-key -i access_key
@@ -1583,6 +1599,10 @@ OSD in out
     ceph osd stat
     ceph osd tree
     ceph osd df tree
+    
+    ceph osd out 4
+
+    33 remapped pgs
     hdd 0.00980 osd.4 up 0 1.00000
     ceph osd in 4
     ceph osd tree
@@ -1675,7 +1695,7 @@ Remove HOST serverg
     ceph orch host ls
 
 Maintenance HOST servere
-    
+
     ceph orch host ok-to-stop serverg.lab.example.com
     ceph orch host maintenance enter serverg.lab.example.com
     ceph orch host ls
@@ -1742,9 +1762,10 @@ Set the PG autoscale option to warn for the pool testpool. Verify that cluster h
 
  Modify the primary affinity settings on an OSD so that it is more likely to be selected as primary for placement groups. 
  Set the primary affinity for OSD 7 to 0
-    
+
     ceph osd tree
     ceph osd primary-affinity 7 0
+    ceph osd tree
     ceph osd dump | grep affinity
 
     ceph osd pool create benchpool 100 100
@@ -1837,7 +1858,7 @@ On clienta, set log
     ceph config set osd.4 log_file /var/log/ceph/myosd4.log
     ceph config set osd.4 log_to_file true
     ceph config set osd.4 debug_ms 1
-    ceph config set osd.4 debug_ms 1
+    ceph orch daemon restart osd.4
 
 On node servere, troubleshooting the status
 
@@ -1845,14 +1866,10 @@ On node servere, troubleshooting the status
 
 On clienta, change cluster network of osd.4
 
-    ceph config get global cluster_network
-    ceph config set global cluster_network 10.10.0.0/24
-
-    ceph config get osd.0 cluster_network
-    172.25.249.0/24
     ceph config get osd.4 cluster_network
-    192.168.0.0/24
-    ceph config set osd.4 cluster_network 172.25.249.0/24
+    172.25.249.0/24
+    ceph config set osd.4 cluster_network 192.168.126.0/24
+    ceph config get osd.4
     ceph orch daemon restart osd.4
     ceph osd tree
 
