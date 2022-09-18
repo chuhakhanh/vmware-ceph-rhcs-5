@@ -995,7 +995,19 @@ On node serverf
 
 Create pool and mirror using pool mode
 
+Prepare to debug mirror mode
+    
+    ceph tell type.id config set debug_subsystem debug-level
+    ceph config set osd.0 debug_rbd_mirror 5/5
+    ceph config set global debug_rbd_mirror 5/5
+    ceph tell mon.0 config show | grep rbd| grep debug
+    "debug_rbd": "0/5",
+    "debug_rbd_mirror": "5/5",
+    ceph tell mon.* config set debug_rbd_mirror 5/5
+
 On node clienta, create rbd pool if neccessary 
+
+    ceph osd lspools
     ceph osd pool create rbd 32
     ceph osd pool application enable rbd rbd
     rbd pool init -p rbd
@@ -1003,35 +1015,12 @@ On node clienta, create rbd pool if neccessary
     rbd create image1 --size 1024 --pool rbd --image-feature=exclusive-lock,journaling
     rbd -p rbd ls
     rbd --image image1 info
-
-    ceph tell type.id config set debug_subsystem debug-level
-    ceph config set osd.0 debug_rbd_mirror 5/5
-    ceph config set global debug_rbd_mirror 5/5
-    ceph tell mon.0 config show | grep rbd| grep debug
-    "debug_rbd": "0/5",
-    "debug_rbd_mirror": "5/5",
-    
-    ceph tell mon.* config set debug_rbd_mirror 5/5
-
     rbd mirror pool enable rbd pool
     rbd --image image1 info
-        rbd image 'image1':
-        size 1 GiB in 256 objects
-        order 22 (4 MiB objects)
-        snapshot_count: 0
-        id: dd7d3dad282f
-        block_name_prefix: rbd_data.dd7d3dad282f
-        format: 2
-        features: exclusive-lock, journaling
-        op_features: 
-        flags: 
-        create_timestamp: Fri Sep  2 12:45:51 2022
-        access_timestamp: Fri Sep  2 12:45:51 2022
-        modify_timestamp: Fri Sep  2 12:45:51 2022
-        journal: dd7d3dad282f
+        journal: 519f0f4f981fb
         mirroring state: enabled
         mirroring mode: journal
-        mirroring global id: 7137f2c2-5534-43a2-b664-3ea6379bacb0
+        mirroring global id: b72af73a-3a7c-4178-b7a8-81e82d39533f
         mirroring primary: true
     
     rbd mirror pool status
@@ -1041,10 +1030,14 @@ On node clienta, create rbd pool if neccessary
 
 On node serverf
 
-    cephadm shell --mount /mnt/bootstrap_token_prod
-    rbd mirror pool peer bootstrap import --site-name secondary --direction rx-only rbd /mnt/bootstrap_token_prod
-    rbd -p rbd ls
+    ceph osd lspools
+    ceph osd pool create rbd 32
+    ceph osd pool application enable rbd rbd
+    rbd pool init -p rbd
 
+    rbd -p rbd ls
+    rbd mirror pool peer bootstrap import --site-name secondary --direction rx-only rbd /mnt/bootstrap_token_prod
+    
 Verify mirror status 
 
 On node clienta, serverf
@@ -1053,6 +1046,9 @@ On node clienta, serverf
     rbd mirror pool info rbd
     rbd mirror pool status
 
+    rbd create image2 --size 128 --pool rbd --image-feature=exclusive-lock,journaling
+    rbd -p rbd ls
+
 Test 1: switch the image between cluster
 
 On node clienta
@@ -1060,18 +1056,19 @@ On node clienta
     rbd mirror image status rbd/image1
 
 On node serverf
-    rbd mirror image promote rbd/myimage
-    rbd mirror image status rbd/myimage
+    rbd mirror image promote rbd/image1
+    rbd mirror image status rbd/image1
+    description: local image is primary
 
 Fallback
 
 On node serverf
-    rbd mirror image demote rbd/myimage
-    rbd mirror image status rbd/myimage
+    rbd mirror image demote rbd/image1
+    rbd mirror image status rbd/image1
 
 On node clienta
-    rbd mirror image promote rbd/myimage
-    rbd mirror image status rbd/myimage
+    rbd mirror image promote rbd/image1
+    rbd mirror image status rbd/image1
 
 Test 2: remove the image on primary cluster
 
@@ -1084,6 +1081,8 @@ On node serverf
 
     rbd -p rbd ls
 
+    ceph tell mon.* config set mon_allow_pool_delete true
+    ceph osd pool delete rbd rbd --yes-i-really-really-mean-it
 
 ## Section 2 - iscsi
 
