@@ -1,0 +1,13 @@
+# lab support
+
+172.11.0.2 repo-2 repo-2.lab.example.com
+# lab2
+
+172.11.0.41 clienta clienta.lab.example.com
+172.11.0.42 clientb clientb.lab.example.com
+172.11.0.43 serverc serverc.lab.example.com
+172.11.0.44 serverd serverd.lab.example.com
+172.11.0.45 servere servere.lab.example.com
+172.11.0.46 serverf serverf.lab.example.com
+172.11.0.47 serverg serverg.lab.example.com
+
