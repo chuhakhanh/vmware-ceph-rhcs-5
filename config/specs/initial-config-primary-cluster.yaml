@@ -1,17 +1,17 @@
 service_type: host
-addr: 10.1.17.111
+addr: <clienta_IP>
 hostname: clienta.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.113
+addr: <serverc_IP>
 hostname: serverc.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.114
+addr: <serverd_IP>
 hostname: serverd.lab.example.com
 ---
 service_type: host
-addr: 10.1.17.115
+addr: <servere_IP>
 hostname: servere.lab.example.com
 ---
 service_type: mon

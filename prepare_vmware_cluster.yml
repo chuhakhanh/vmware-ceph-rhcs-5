@@ -58,8 +58,8 @@
         mode: '0755'
 
     - name: initial-config-primary-cluster render
-      template:
-        src: ./config/initial-config-primary-cluster.yaml
+      copy:
+        src: ./config/specs/
         dest: /root/ceph/
         
     

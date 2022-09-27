@@ -6,7 +6,7 @@ placement:
   - servere.lab.example.com
 spec:
   pool: iscsipool1
-  trusted_ip_list: "10.1.17.113,10.1.17.115"
+  trusted_ip_list: "<serverc_IP>,<servere_IP>"
   api_port: 5000
   api_secure: false
   api_user: admin
