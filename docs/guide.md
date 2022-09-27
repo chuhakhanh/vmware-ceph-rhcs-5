@@ -1,5 +1,6 @@
 
 # Part 2    
+
 ## Section 1 - install ceph cluster
 ### install ceph cluster serverc, serverd, servere
 
@@ -51,7 +52,7 @@ run preflight
     ssh-keygen
     ssh-copy-id -i /root/.ssh/id_rsa.pub root@serverf.lab.example.com
 
-
+    systemctl list-units 'ceph*'
     ansible-playbook -i hosts cephadm-preflight.yml --extra-vars "ceph_origin="
     podman login repo-2.lab.example.com --username quayadmin --password password
 

@@ -29,6 +29,9 @@ repo-2 is a webserver contains, QuayIO server:
 - 2022_07/<repo ID>: repository 
 - :443/ : images to deploy
 
+172.11.0.0/24
+172.12.0.0/24
+
 ## Setup cluster
 
 ### Prepare the template Virtual machine
