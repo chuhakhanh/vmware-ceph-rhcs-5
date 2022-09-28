@@ -6,6 +6,7 @@
 
 - name: Create resouce pool for student if not existence 
   community.vmware.vmware_resource_pool:
+    esxi_hostname: "{{ item.esxi_hostname }}"
     hostname: "{{ vcenter_hostname }}"
     username: "{{ vcenter_username }}"
     password: "{{ vcenter_password }}"
