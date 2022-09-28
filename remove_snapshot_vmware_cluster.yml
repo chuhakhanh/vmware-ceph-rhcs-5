@@ -10,7 +10,6 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
-    resource_pool: "{{ lab_name }}"
     folder: /lab
     name: "{{ item.name }}"
     state: absent
