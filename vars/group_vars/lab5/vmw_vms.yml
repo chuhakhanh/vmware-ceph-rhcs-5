@@ -4,27 +4,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -43,27 +43,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -82,27 +82,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -121,27 +121,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -160,27 +160,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -199,27 +199,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
@@ -238,27 +238,27 @@ vms:
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-02
       
     networks:
       - name: LABSYSTEM_vnet_04
