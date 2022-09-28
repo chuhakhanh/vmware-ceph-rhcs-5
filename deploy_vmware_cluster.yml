@@ -12,7 +12,7 @@
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
     cluster: "{{ item.cluster_name }}"
-    resource_pool: "{{ CEPH_LAB/lab_name }}"    
+    resource_pool: "CEPH_LAB/{{ lab_name }}"    
     state: present
   loop: "{{ vms }}" 
   delegate_to: localhost  
@@ -24,7 +24,7 @@
     password: "{{ vcenter_password }}"
     datacenter: "{{ vcenter_datacenter }}"
     validate_certs: no
-    resource_pool: "{{ CEPH_LAB/lab_name }}"
+    resource_pool: "CEPH_LAB/{{ lab_name }}"
     folder: /lab
     name: "{{ item.name }}"
     state: poweredon
