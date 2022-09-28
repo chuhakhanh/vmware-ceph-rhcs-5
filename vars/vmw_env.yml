@@ -1,8 +1,8 @@
 # vmware vars
-vcenter_hostname: 10.1.17.41
-vcenter_username: administrator@vsphere.local
-vcenter_password: Admin@123
-vcenter_datacenter: Datacenter
+vcenter_hostname: 10.101.101.99
+vcenter_username: ceph@vsphere.local
+vcenter_password: Chezmnh7Z1!
+vcenter_datacenter: DC-LAB
 
 
  
