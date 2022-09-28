@@ -1,5 +1,5 @@
 vms:
-  - name: lab1-clienta
+  - name: lab11-clienta
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -28,17 +28,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.11
+        ip: 172.11.0.111
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.11
+        ip: 172.12.0.111
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-clientb
+  - name: lab11-clientb
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -67,17 +67,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.12
+        ip: 172.11.0.112
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.12
+        ip: 172.12.0.112
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverc
+  - name: lab11-serverc
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -106,17 +106,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.13
+        ip: 172.11.0.113
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.13
+        ip: 172.12.0.113
         netmask: 255.255.255.0
         device_type: vmxnet3  
 
-  - name: lab1-serverd
+  - name: lab11-serverd
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -145,17 +145,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.14
+        ip: 172.11.0.114
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.14
+        ip: 172.12.0.114
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-servere
+  - name: lab11-servere
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -184,17 +184,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.15
+        ip: 172.11.0.115
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.15
+        ip: 172.12.0.115
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverf
+  - name: lab11-serverf
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -223,17 +223,17 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.16
+        ip: 172.11.0.116
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.16
+        ip: 172.12.0.116
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverg
+  - name: lab11-serverg
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
@@ -262,13 +262,13 @@ vms:
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.17
+        ip: 172.11.0.117
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.17
+        ip: 172.12.0.117
         netmask: 255.255.255.0
         device_type: vmxnet3
 

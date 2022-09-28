@@ -12,3 +12,7 @@
     - name: Destroy the cluster on VMware environment
       include: destroy_vmware_cluster.yml
       when: action == "destroy"
+
+    - name: Destroy the cluster on VMware environment
+      include: poweroff_vmware_cluster.yml
+      when: action == "poweroff"

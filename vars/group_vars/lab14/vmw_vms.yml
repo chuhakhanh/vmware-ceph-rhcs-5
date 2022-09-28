@@ -1,274 +1,274 @@
 vms:
-  - name: lab1-clienta
+  - name: lab14-clienta
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.11
+        ip: 172.11.0.141
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.11
+        ip: 172.12.0.141
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-clientb
+  - name: lab14-clientb
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.12
+        ip: 172.11.0.142
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.12
+        ip: 172.12.0.142
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverc
+  - name: lab14-serverc
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.13
+        ip: 172.11.0.143
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.13
+        ip: 172.12.0.143
         netmask: 255.255.255.0
         device_type: vmxnet3  
 
-  - name: lab1-serverd
+  - name: lab14-serverd
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.14
+        ip: 172.11.0.144
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.14
+        ip: 172.12.0.144
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-servere
+  - name: lab14-servere
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.15
+        ip: 172.11.0.145
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.15
+        ip: 172.12.0.145
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverf
+  - name: lab14-serverf
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.16
+        ip: 172.11.0.146
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.16
+        ip: 172.12.0.146
         netmask: 255.255.255.0
         device_type: vmxnet3
 
-  - name: lab1-serverg
+  - name: lab14-serverg
     esxi_hostname: 10.101.101.12
     disk:
     - size_gb: 30
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
 
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
     
     - size_gb: 10
       type: thin
-      datastore: SSD-DATA
+      datastore: SSD-PCI-03
       
     networks:
       - name: LABSYSTEM_vnet_04
-        ip: 172.11.0.17
+        ip: 172.11.0.147
         netmask: 255.255.255.0
         gateway: 172.11.0.1
         device_type: vmxnet3
 
       - name: LABSYSTEM_vnet_05
-        ip: 172.12.0.17
+        ip: 172.12.0.147
         netmask: 255.255.255.0
         device_type: vmxnet3
 

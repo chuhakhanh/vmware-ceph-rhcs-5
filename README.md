@@ -53,23 +53,29 @@ Create a Virtual machine cluster
     podman exec -it deploy-2 /bin/bash; 
     vi ~/.bashrc 
     alias ll='ls -lG'
+    dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+    yum install sshpass
+
     
     docker exec -it deploy-2 -u0 /bin/bash;
     git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
     cd /root/vmware-ceph-rhcs-5
     git checkout lab-9-2022
+
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab2"
+
 Push public ssh key into this machines due to predefined password (i=lab#)
 
-
+    ssh-keygen
     for i in lab1 lab2 lab3 lab4 lab5 lab6 lab7 lab8 lab9 lab10;
     do
         chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
     done
-
-    for i in lab1
+    
+    
+    for i in lab15
     do
         chmod u+x ./script/key_copy.sh; ./script/key_copy.sh config/inventory/$i
     done
@@ -83,7 +89,7 @@ Then apply prequisite for virual machines
         ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
     done
 
-    for i in lab1
+    for i in lab15
     do
         ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
     done
@@ -98,15 +104,12 @@ Fully provisioning all lab
         ansible-playbook -i config/inventory/$i prepare_vmware_cluster.yml -e "lab_name=$i"
     done
     
-## Setup ceph
+
 ### Configure quayio as default insecure local registry 
 
-    cat /etc/containers/registries.conf 
+Check local quayio
 
-    [[registry]]
-    location = "repo-2.lab.example.com/quayadmin/lab"
-    prefix = "registry.redhat.io"
-    
+    podman login repo-2.lab.example.com --username quayadmin --password password
     podman system info
 
 [Following steps in docs/gudie.md to work on ceph cluster](docs/guide.md)

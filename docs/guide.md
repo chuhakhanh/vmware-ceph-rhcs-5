@@ -66,7 +66,7 @@ https://docs.ceph.com/en/quincy/cephadm/install/#running-the-bootstrap-command
     --registry-url=repo-2.lab.example.com \
     --registry-username=quayadmin \
     --registry-password=password  \
-    --yes-i-know
+    --yes-i-know \
     --single-host-defaults
 
 ### Post installation
@@ -86,7 +86,8 @@ In case, node exporter is set to redhat registry. We need to reconfigure image b
     ceph config set mgr mgr/cephadm/container_image_prometheus repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus
     ceph config set mgr mgr/cephadm/container_image_grafana repo-2.lab.example.com/quayadmin/lab/rhceph/rhceph-5-dashboard-rhel8
     ceph config set mgr mgr/cephadm/container_image_node_exporter repo-2.lab.example.com/quayadmin/lab/openshift4/ose-prometheus-node-exporter
-    for i in {container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};
+    
+    for i in {container_image_base,container_image_prometheus,container_image_grafana,container_image_alertmanager,container_image_node_exporter};
     do 
         ceph config get mgr mgr/cephadm/$i ;
     done  
