@@ -57,7 +57,7 @@ Create a Virtual machine cluster
     docker exec -it deploy-2 -u0 /bin/bash;
     git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
     cd /root/vmware-ceph-rhcs-5
-    git checkout lab-7-2022
+    git checkout lab-9-2022
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab2"
