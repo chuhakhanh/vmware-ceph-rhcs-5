@@ -41,10 +41,20 @@ repo-2 is a webserver contains, QuayIO server:
           
 ### Deploy virtual machines cluster
 
+From repo-1 export images
+
+    docker save -o centos-source-deploy.tar 4b4369be8793
+
 From deploy-1 
 Create a Virtual machine cluster 
 
-    docker exec -it deploy-1 -u0 /bin/bash;
+    podman load -i centos-source-deploy.tar
+    podman run -d --name deploy-2 4b4369be8793
+    podman exec -it deploy-2 /bin/bash; 
+    vi ~/.bashrc 
+    alias ll='ls -lG'
+    
+    docker exec -it deploy-2 -u0 /bin/bash;
     git clone https://github.com/chuhakhanh/vmware-ceph-rhcs-5
     cd /root/vmware-ceph-rhcs-5
     git checkout lab-7-2022
