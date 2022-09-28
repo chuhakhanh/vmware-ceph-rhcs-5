@@ -1,7 +1,7 @@
 # lab support
 
 172.11.0.2 repo-2 repo-2.lab.example.com
-# lab2
+# lab11
 
 172.11.0.111 clienta clienta.lab.example.com
 172.11.0.112 clientb clientb.lab.example.com
