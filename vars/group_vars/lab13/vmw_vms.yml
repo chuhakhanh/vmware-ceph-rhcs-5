@@ -1,0 +1,274 @@
+vms:
+  - name: lab13-clienta
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.131
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.131
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab13-clientb
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.132
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.132
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab13-serverc
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.133
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.133
+        netmask: 255.255.255.0
+        device_type: vmxnet3  
+
+  - name: lab13-serverd
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.134
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.134
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab13-servere
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.135
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.135
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab13-serverf
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.136
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.136
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
+  - name: lab13-serverg
+    esxi_hostname: 10.101.101.12
+    disk:
+    - size_gb: 30
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+    
+    - size_gb: 10
+      type: thin
+      datastore: SSD-PCI-03
+      
+    networks:
+      - name: LABSYSTEM_vnet_04
+        ip: 172.11.0.137
+        netmask: 255.255.255.0
+        gateway: 172.11.0.1
+        device_type: vmxnet3
+
+      - name: LABSYSTEM_vnet_05
+        ip: 172.12.0.137
+        netmask: 255.255.255.0
+        device_type: vmxnet3
+
