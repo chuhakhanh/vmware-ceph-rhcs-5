@@ -13,6 +13,19 @@
       include: destroy_vmware_cluster.yml
       when: action == "destroy"
 
-    - name: Destroy the cluster on VMware environment
+    - name: Poweroff the cluster on VMware environment
       include: poweroff_vmware_cluster.yml
       when: action == "poweroff"
+
+    - name: Poweron the cluster on VMware environment
+      include: poweron_vmware_cluster.yml
+      when: action == "poweron"
+
+    - name: Create snapshot snap1 on all VM in the cluster on VMware environment
+      include: create_snapshot_vmware_cluster.yml
+      when: action == "create_snapshot"
+
+    - name: Remove snapshot snap1 on all VM in the cluster on VMware environment
+      include: remove_snapshot_vmware_cluster.yml
+      when: action == "remove_snapshot"
+      
