@@ -1,6 +1,6 @@
 service_type: rgw
-service_id: myrealm.myzone
-service_name: rgw.myrealm.myzone
+service_id: cl260.us-east-1
+service_name: rgw.cl260.us-east-1
 placement:
   count: 4
   hosts:
@@ -8,3 +8,13 @@ placement:
   - servere.lab.example.com
 spec:
   rgw_frontend_port: 8080
+---
+service_type: rgw
+service_id: cl260.us-east-2
+service_name: rgw.cl260.us-east-1
+placement:
+  hosts:
+  - serverc.lab.example.com
+  - serverd.lab.example.com
+spec:
+  rgw_frontend_port: 80
