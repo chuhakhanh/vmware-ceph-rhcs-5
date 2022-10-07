@@ -563,8 +563,6 @@ ceph osd crush rule create-replicated <name> <root> <type> [<class>]
     ceph osd crush tunables optimal
 ## Section 2 - manage OSD map
 
-
-
 Get epoch time, set-full-ratio, set-nearfull-ratio
 
     ceph osd dump

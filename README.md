@@ -66,6 +66,7 @@ Create a Virtual machine cluster
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=destroy" -e "lab_name=lab1"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=poweroff" -e "lab_name=lab15"
+    ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=poweron" -e "lab_name=lab15"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=create_snapshot" -e "lab_name=lab15"
     ansible-playbook -i config/inventory/lab setup_vmware_cluster.yml -e "action=remove_snapshot" -e "lab_name=lab15"
 
